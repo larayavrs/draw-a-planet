@@ -105,12 +105,40 @@ export function PlanetCanvas({ tier = "guest" }: PlanetCanvasProps) {
     if (brush) brush.width = store.brushSize;
   }, [store.brushSize]);
 
-  const handleClick = useCallback(() => {
-    if (store.tool !== "fill" || !fabricRef.current) return;
+  const handleClick = useCallback(async (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (store.tool !== "fill" || !fabricRef.current || !canvasEl.current) return;
+    
     const fc = fabricRef.current as Record<string, unknown>;
-    (fc as { backgroundColor: string }).backgroundColor = store.currentColor;
-    (fc as { requestRenderAll: () => void }).requestRenderAll();
-  }, [store.tool, store.currentColor]);
+    const canvas = canvasEl.current;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Calculate click position relative to actual canvas (accounting for CSS scale)
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
+    
+    // Create a filled rectangle at click position to simulate fill
+    const { Rect } = await import("fabric");
+    const fillRect = new Rect({
+      left: 0,
+      top: 0,
+      width: CANVAS_SIZE,
+      height: CANVAS_SIZE,
+      fill: store.currentColor,
+      selectable: false,
+      evented: false,
+    });
+    
+    (fc as { add: (obj: unknown) => void }).add(fillRect);
+    (fc as { sendToBack?: (obj: unknown) => void; requestRenderAll: () => void }).requestRenderAll();
+    
+    // Move to back so it becomes background
+    setTimeout(() => {
+      if (fc.sendToBack) {
+        fc.sendToBack(fillRect);
+        (fc as { requestRenderAll: () => void }).requestRenderAll();
+      }
+    }, 0);
+  }, [store.tool, store.currentColor, scale]);
 
   const displaySize = Math.round(CANVAS_SIZE * scale);
 

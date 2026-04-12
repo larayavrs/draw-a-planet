@@ -108,6 +108,13 @@ export default function DrawPage({
       <div className="mx-auto max-w-6xl px-4 py-6 lg:py-8">
         {/* Page header */}
         <div className="mb-5 flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1 text-sm text-text-muted hover:text-white transition-colors"
+          >
+            <span>←</span>
+            <span>{t("back")}</span>
+          </button>
           <h1 className="text-2xl font-bold text-white">{t("page_title")}</h1>
           {!tierLoading && isPremium && (
             <span className="text-[11px] font-bold text-lime bg-lime/10 border border-lime/30 px-2 py-0.5 rounded-full">

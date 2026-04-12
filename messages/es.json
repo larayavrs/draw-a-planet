@@ -25,6 +25,7 @@
   },
   "draw": {
     "page_title": "Dibujar un Planeta",
+    "back": "Volver",
     "planet_name_label": "Nombre del planeta",
     "planet_name_placeholder": "Planeta sin nombre",
     "planet_type_label": "Tipo de planeta",

@@ -18,26 +18,38 @@ export function BrushToolbar() {
 
   function handleUndo() {
     if (!fabricRef?.current) return;
-    const fc = fabricRef.current as { undo?: () => void; _objects?: unknown[] };
-    if (fc.undo) {
-      fc.undo();
-    } else {
-      const canvas = fc as { remove?: (o: unknown) => void; _objects?: unknown[]; requestRenderAll?: () => void };
-      const objs = canvas._objects;
-      if (objs && objs.length > 0 && canvas.remove && canvas.requestRenderAll) {
-        canvas.remove(objs[objs.length - 1]);
-        canvas.requestRenderAll();
+    const fc = fabricRef.current as { 
+      _objects?: unknown[]; 
+      remove?: (obj: unknown) => void; 
+      requestRenderAll?: () => void;
+      clearUndo?: () => void;
+    };
+    const objects = fc._objects;
+    if (objects && objects.length > 0) {
+      const lastObj = objects[objects.length - 1];
+      if (fc.remove && fc.requestRenderAll) {
+        fc.remove(lastObj);
+        fc.requestRenderAll();
       }
     }
   }
 
   function handleClear() {
     if (!fabricRef?.current) return;
-    const fc = fabricRef.current as { clear?: () => void; requestRenderAll?: () => void; backgroundColor?: string };
-    if (fc.clear) {
-      fc.clear();
+    const fc = fabricRef.current as { 
+      _objects?: unknown[]; 
+      remove?: (obj: unknown) => void; 
+      requestRenderAll?: () => void;
+      backgroundColor?: string;
+    };
+    // Remove all objects from canvas
+    const objects = fc._objects ? [...fc._objects] : [];
+    if (fc.remove && fc.requestRenderAll) {
+      for (const obj of objects) {
+        fc.remove(obj);
+      }
       fc.backgroundColor = "#1a0e2e";
-      fc.requestRenderAll?.();
+      fc.requestRenderAll();
     }
   }
 

@@ -3,6 +3,7 @@ import { Rubik } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
 import { routing } from "@/i18n/routing";
 import { Navbar } from "@/components/ui/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -62,11 +63,13 @@ export default async function LocaleLayout({
         <link rel="preload" href="/fonts/DammitSans.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body className="min-h-full flex flex-col antialiased">
-        <NextIntlClientProvider messages={messages}>
-          <Navbar locale={locale} />
-          <main className="flex-1">{children}</main>
-          <Footer locale={locale} />
-        </NextIntlClientProvider>
+        <Suspense>
+          <NextIntlClientProvider messages={messages}>
+            <Navbar locale={locale} />
+            <main className="flex-1">{children}</main>
+            <Footer locale={locale} />
+          </NextIntlClientProvider>
+        </Suspense>
       </body>
     </html>
   );

@@ -25,6 +25,7 @@
   },
   "draw": {
     "page_title": "Draw a Planet",
+    "back": "Back",
     "planet_name_label": "Planet name",
     "planet_name_placeholder": "Unnamed planet",
     "planet_type_label": "Planet type",
