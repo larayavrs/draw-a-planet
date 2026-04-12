@@ -5,16 +5,12 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
 import { routing } from "@/i18n/routing";
+
+import { ThemeProvider } from "@/providers/theme";
+
 import { Navbar } from "@/components/ui/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import "../globals.css";
-
-const rubik = Rubik({
-  variable: "--font-rubik",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: {
@@ -52,22 +48,21 @@ export default async function LocaleLayout({
   // preventing the "blocking route" warning during prerender.
   setRequestLocale(locale);
 
-  const messages = locale === "es"
-    ? (await import("@messages/es.json")).default
-    : (await import("@messages/en.json")).default;
+  const messages =
+    locale === "es"
+      ? (await import("@messages/es.json")).default
+      : (await import("@messages/en.json")).default;
 
   return (
-    <html lang={locale} className={`${rubik.variable} h-full`}>
-      <head>
-        {/* Preload Dammit Sans — only used for hero headings */}
-        <link rel="preload" href="/fonts/DammitSans.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-      </head>
-      <body className="min-h-full flex flex-col antialiased">
+    <html lang={locale} suppressHydrationWarning>
+      <body className="min-h-full flex flex-col antialiased h-full font-sans">
         <Suspense>
           <NextIntlClientProvider messages={messages}>
-            <Navbar locale={locale} />
-            <main className="flex-1">{children}</main>
-            <Footer locale={locale} />
+            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+              <Navbar locale={locale} />
+              <main className="flex-1">{children}</main>
+              <Footer locale={locale} />
+            </ThemeProvider>
           </NextIntlClientProvider>
         </Suspense>
       </body>
