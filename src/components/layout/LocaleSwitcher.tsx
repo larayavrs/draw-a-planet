@@ -22,10 +22,10 @@ export function LocaleSwitcher() {
         <button
           key={l}
           onClick={() => switchLocale(l)}
-          className={`px-2 py-1 text-xs font-semibold uppercase rounded-[6px] transition-colors ${
+          className={`px-2 py-1 text-xs font-semibold uppercase rounded-md transition-colors ${
             locale === l
-              ? "bg-sentry-purple/30 text-sentry-purple"
-              : "text-text-muted hover:text-white"
+              ? "bg-accent text-accent-foreground"
+              : "text-text-muted hover:text-accent-foreground"
           }`}
         >
           {l}
