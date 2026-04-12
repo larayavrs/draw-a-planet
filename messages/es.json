@@ -46,7 +46,18 @@
     "publish_error": "Algo salió mal. Por favor intentá de nuevo.",
     "guest_limit_reached": "Los invitados solo pueden crear 1 planeta por sesión. ¡Registrate para planetas ilimitados!",
     "name_too_long": "El nombre debe tener 40 caracteres o menos",
-    "name_required": "Por favor poné un nombre a tu planeta"
+    "name_required": "Por favor poné un nombre a tu planeta",
+    "templates_title": "Plantillas",
+    "templates_locked": "Desbloqueá las plantillas de texturas con Premium",
+    "templates_upgrade_cta": "Obtener Premium",
+    "premium_perks_title": "Tus ventajas Premium",
+    "premium_perk_permanent": "Planeta permanente",
+    "premium_perk_orbit": "Posición de órbita prioritaria",
+    "premium_perk_speed": "Velocidad de órbita más rápida",
+    "premium_perk_types": "Los 7 tipos de planeta",
+    "premium_perk_colors": "Rueda de colores completa",
+    "upgrade_teaser_title": "Actualizá a Premium",
+    "upgrade_teaser_desc": "Planetas permanentes · 7 tipos · Paleta completa"
   },
   "planet_types": {
     "rocky": "Rocoso",

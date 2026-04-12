@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { Button } from "./Button";
+import { getDefaultSystemSlug } from "@/lib/client-cache";
 import type { User } from "@supabase/supabase-js";
 
 export function Navbar({ locale }: { locale: string }) {
@@ -24,19 +25,10 @@ export function Navbar({ locale }: { locale: string }) {
   }, []);
 
   useEffect(() => {
-    fetch("/api/systems")
-      .then((r) => r.json())
-      .then((data) => {
-        const systems = data.systems ?? [];
-        const defaultSys = systems.find((s: { is_default: boolean }) => s.is_default) ?? systems[0];
-        if (defaultSys) setDefaultSystemSlug(defaultSys.slug);
-      })
-      .catch(() => {});
+    getDefaultSystemSlug().then((slug) => { if (slug) setDefaultSystemSlug(slug); });
   }, []);
 
-  // Close mobile menu on navigation
   const closeMenu = () => setMenuOpen(false);
-
   const base = `/${locale}`;
 
   return (
@@ -99,50 +91,16 @@ export function Navbar({ locale }: { locale: string }) {
       {menuOpen && (
         <div className="md:hidden border-t border-border-purple bg-darker-purple/95 backdrop-blur-[18px]">
           <nav className="flex flex-col px-4 py-3 gap-1">
-            <Link
-              href={`${base}/draw`}
-              onClick={closeMenu}
-              className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors"
-            >
-              {t("draw")}
-            </Link>
-            <Link
-              href={`${base}/system/${defaultSystemSlug}`}
-              onClick={closeMenu}
-              className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors"
-            >
-              {t("explore")}
-            </Link>
-            <Link
-              href={`${base}/premium`}
-              onClick={closeMenu}
-              className="px-3 py-2.5 text-sm text-lime hover:text-lime/80 hover:bg-deep-purple/50 rounded-lg transition-colors font-medium"
-            >
-              {t("premium")}
-            </Link>
+            <Link href={`${base}/draw`} onClick={closeMenu} className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors">{t("draw")}</Link>
+            <Link href={`${base}/system/${defaultSystemSlug}`} onClick={closeMenu} className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors">{t("explore")}</Link>
+            <Link href={`${base}/premium`} onClick={closeMenu} className="px-3 py-2.5 text-sm text-lime hover:text-lime/80 hover:bg-deep-purple/50 rounded-lg transition-colors font-medium">{t("premium")}</Link>
             <div className="border-t border-border-purple my-2" />
             {user ? (
-              <Link
-                href={`${base}/settings`}
-                onClick={closeMenu}
-                className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors"
-              >
-                {t("settings")}
-              </Link>
+              <Link href={`${base}/settings`} onClick={closeMenu} className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors">{t("settings")}</Link>
             ) : (
               <>
-                <Link
-                  href={`${base}/auth/login`}
-                  onClick={closeMenu}
-                  className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors"
-                >
-                  {t("login")}
-                </Link>
-                <Link
-                  href={`${base}/auth/register`}
-                  onClick={closeMenu}
-                  className="px-3 py-2 text-sm"
-                >
+                <Link href={`${base}/auth/login`} onClick={closeMenu} className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors">{t("login")}</Link>
+                <Link href={`${base}/auth/register`} onClick={closeMenu} className="px-3 py-2 text-sm">
                   <Button variant="cta" size="sm" className="w-full">{t("register")}</Button>
                 </Link>
               </>

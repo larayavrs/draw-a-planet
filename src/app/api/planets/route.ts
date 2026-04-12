@@ -147,7 +147,8 @@ export async function POST(req: NextRequest) {
   const orbit = computeOrbitPlacement(activePlanets ?? 0, tier);
 
   // ── 9. Upload texture to Supabase Storage ────────────────────────────────
-  const base64Data = texture_data_url.replace("data:image/png;base64,", "");
+  // Strip the data URL prefix regardless of mime type (png, jpeg, webp)
+  const base64Data = texture_data_url.replace(/^data:[^;]+;base64,/, "");
   const textureBuffer = Buffer.from(base64Data, "base64");
 
   if (textureBuffer.length > TEXTURE_MAX_BYTES) {

@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // use cache directive (Next.js 16, replaces unstable_cache)
+  cacheComponents: true,
   experimental: {
     optimizePackageImports: ["@react-three/drei", "@react-three/fiber"],
   },

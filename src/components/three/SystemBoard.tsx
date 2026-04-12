@@ -3,11 +3,14 @@
 import { Suspense, useState, useCallback, useEffect, useRef } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { Stars, OrbitControls } from "@react-three/drei";
+import * as THREE from "three";
+
+// Shared with OrbitingPlanet — same cache instance
+const preloadLoader = new THREE.TextureLoader();
 import { CentralStar } from "./CentralStar";
 import { OrbitingPlanet } from "./OrbitingPlanet";
 import { useSystemRealtime } from "@/hooks/useSystemRealtime";
 import type { Planet, System } from "@/types/planet";
-import * as THREE from "three";
 
 interface SystemBoardProps {
   system: System;
@@ -111,6 +114,18 @@ function BoardContent({
  * ────────────────────────────────────────────────────────────────── */
 export function SystemBoard({ system, initialPlanets, mini = false }: SystemBoardProps) {
   const [planets, setPlanets] = useState<Planet[]>(initialPlanets);
+
+  // Kick off parallel texture preloads before any OrbitingPlanet mounts.
+  // THREE.Cache (enabled in OrbitingPlanet module) stores completed loads by URL,
+  // so when each planet's useEffect fires it gets an instant cache hit.
+  useEffect(() => {
+    const urls = initialPlanets
+      .map((p) => p.texture_url)
+      .filter((u): u is string => Boolean(u));
+    urls.forEach((url) => {
+      preloadLoader.load(url, (t) => { t.colorSpace = THREE.SRGBColorSpace; }, undefined, () => {});
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [paused, setPaused] = useState(false);
   const [focusedPlanet, setFocusedPlanet] = useState<Planet | null>(null);
 

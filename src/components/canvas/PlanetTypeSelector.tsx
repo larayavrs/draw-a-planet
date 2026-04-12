@@ -26,6 +26,7 @@ export function PlanetTypeSelector({ tier, locale }: { tier: UserTier; locale: s
   const t = useTranslations("draw");
   const tTypes = useTranslations("planet_types");
   const tGate = useTranslations("tier_gate");
+  const tCommon = useTranslations("common");
   const { planetType, setPlanetType } = useCanvasStore();
   const [upsellOpen, setUpsellOpen] = useState(false);
   const allowed = ALLOWED_PLANET_TYPES[tier];
@@ -36,7 +37,8 @@ export function PlanetTypeSelector({ tier, locale }: { tier: UserTier; locale: s
         <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">
           {t("planet_type_label")}
         </p>
-        <div className="grid grid-cols-4 gap-2">
+        {/* 4-col grid on desktop sidebar; 7-col single row on mobile */}
+        <div className="grid grid-cols-4 sm:grid-cols-7 lg:grid-cols-4 gap-1.5">
           {ALL_TYPES.map((type) => {
             const isAllowed = allowed.includes(type);
             return (
@@ -48,7 +50,7 @@ export function PlanetTypeSelector({ tier, locale }: { tier: UserTier; locale: s
                 }}
                 title={tTypes(type)}
                 className={cn(
-                  "relative flex flex-col items-center gap-1 p-2 rounded-[8px] text-xs font-medium transition-all",
+                  "relative flex flex-col items-center gap-1 p-2 rounded-lg text-[11px] font-medium transition-all",
                   isAllowed
                     ? planetType === type
                       ? "bg-sentry-purple/40 text-white ring-1 ring-sentry-purple"
@@ -56,10 +58,10 @@ export function PlanetTypeSelector({ tier, locale }: { tier: UserTier; locale: s
                     : "bg-border-purple/20 text-text-muted/40 cursor-pointer"
                 )}
               >
-                <span className="text-lg">{PLANET_TYPE_ICONS[type]}</span>
-                <span className="leading-tight text-center">{tTypes(type)}</span>
+                <span className="text-lg leading-none">{PLANET_TYPE_ICONS[type]}</span>
+                <span className="leading-tight text-center hidden sm:block lg:block">{tTypes(type)}</span>
                 {!isAllowed && (
-                  <span className="absolute top-1 right-1 text-[10px] text-text-muted/50">🔒</span>
+                  <span className="absolute top-1 right-1 text-[9px] text-text-muted/50">🔒</span>
                 )}
               </button>
             );
@@ -71,7 +73,7 @@ export function PlanetTypeSelector({ tier, locale }: { tier: UserTier; locale: s
         <p className="text-text-muted text-sm mb-4">
           {tier === "guest" ? tGate("guest_to_registered") : tGate("registered_to_premium")}
         </p>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           {tier === "guest" && (
             <Link href={`/${locale}/auth/register`}>
               <Button variant="cta">{tGate("cta_register")}</Button>
@@ -81,7 +83,7 @@ export function PlanetTypeSelector({ tier, locale }: { tier: UserTier; locale: s
             <Button variant="primary">{tGate("cta_premium")}</Button>
           </Link>
           <Button variant="ghost" onClick={() => setUpsellOpen(false)}>
-            {useTranslations("common")("cancel")}
+            {tCommon("cancel")}
           </Button>
         </div>
       </Modal>

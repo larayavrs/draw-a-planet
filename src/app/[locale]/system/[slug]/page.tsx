@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { SystemBoard } from "@/components/three/SystemBoard";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -13,31 +14,21 @@ interface Params {
   slug: string;
 }
 
-export async function generateMetadata({ params }: { params: Promise<Params> }) {
-  const { slug } = await params;
-  return { title: `System: ${slug}` };
-}
-
-export default async function SystemPage({
-  params,
-}: {
-  params: Promise<Params>;
-}) {
-  const { locale, slug } = await params;
-  const t = await getTranslations("system_board");
+async function getSystem(slug: string): Promise<System | null> {
+  "use cache";
   const supabase = getSupabaseServiceClient();
-
-  // Fetch system
-  const { data: system } = await supabase
+  const { data } = await supabase
     .from("systems")
     .select("*")
     .eq("slug", slug)
     .eq("is_active", true)
     .single();
+  return (data as System | null) ?? null;
+}
 
-  if (!system) notFound();
-
-  // Fetch active planets
+async function getSystemPlanets(systemId: string): Promise<Planet[]> {
+  "use cache";
+  const supabase = getSupabaseServiceClient();
   const { data: planetsRaw } = await supabase
     .from("planets")
     .select(`
@@ -47,22 +38,72 @@ export default async function SystemPage({
       user_id,
       users ( username, avatar_url )
     `)
-    .eq("system_id", system.id)
+    .eq("system_id", systemId)
     .eq("is_active", true)
     .order("created_at", { ascending: false })
     .limit(200);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const planets: Planet[] = (planetsRaw ?? []).map((p: any) => ({
+  return (planetsRaw ?? []).map((p: any) => ({
     ...p,
     creator_username: (p.users as { username: string } | null)?.username ?? null,
-    creator_avatar: (p.users as { avatar_url: string } | null)?.avatar_url ?? null,
+    creator_avatar:   (p.users as { avatar_url: string } | null)?.avatar_url ?? null,
   })) as Planet[];
+}
+
+export async function generateStaticParams() {
+  const supabase = getSupabaseServiceClient();
+  const { data: systems } = await supabase
+    .from("systems")
+    .select("slug")
+    .eq("is_active", true);
+
+  const locales = ["en", "es"];
+  const slugs = (systems ?? []).map((s: { slug: string }) => s.slug);
+
+  return locales.flatMap((locale) =>
+    slugs.map((slug: string) => ({ locale, slug }))
+  );
+}
+
+export async function generateMetadata({ params }: { params: Promise<Params> }) {
+  const { slug } = await params;
+  const system = await getSystem(slug);
+  if (!system) return { title: "System not found" };
+  return { title: `${system.name} — Draw a Planet` };
+}
+
+export default async function SystemPage({
+  params,
+}: {
+  params: Promise<Params>;
+}) {
+  const { locale, slug } = await params;
+
+  const system = await getSystem(slug);
+  if (!system) notFound();
+
+  return (
+    <Suspense fallback={<div className="min-h-[calc(100dvh-80px)] bg-darker-purple" />}>
+      <SystemContent system={system} locale={locale} />
+    </Suspense>
+  );
+}
+
+async function SystemContent({
+  system,
+  locale,
+}: {
+  system: System;
+  locale: string;
+}) {
+  const t = await getTranslations("system_board");
+  const planets = await getSystemPlanets(system.id);
 
   return (
     <div className="relative overflow-hidden" style={{ height: "calc(100dvh - 80px)" }}>
-      {/* 3D Canvas — fills entire container */}
-      <div className="absolute inset-0">
+      {/* 3D Canvas — key forces full remount when system changes */}
+      <div className="absolute inset-0" key={system.id}>
         {planets.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <GlassCard className="p-8 text-center max-w-sm">
@@ -74,17 +115,14 @@ export default async function SystemPage({
             </GlassCard>
           </div>
         ) : (
-          <SystemBoard
-            system={system as unknown as System}
-            initialPlanets={planets}
-          />
+          <SystemBoard system={system} initialPlanets={planets} />
         )}
       </div>
 
       {/* Floating header bar */}
       <div className="absolute top-0 left-0 right-0 z-10">
         <SystemHeader
-          system={system as unknown as System}
+          system={system}
           planetCount={planets.length}
           locale={locale}
           planetsCountLabel={t("planets_count", { count: planets.length })}

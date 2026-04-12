@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import Link from "next/link";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
@@ -7,7 +8,7 @@ interface Props {
   params: Promise<{ locale: string }>;
 }
 
-export default async function LandingPage({ params }: Props) {
+async function LandingContent({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("landing");
   const base = `/${locale}`;
@@ -138,5 +139,13 @@ export default async function LandingPage({ params }: Props) {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function LandingPage({ params }: Props) {
+  return (
+    <Suspense fallback={<div className="min-h-[90dvh] bg-darker-purple" />}>
+      <LandingContent params={params} />
+    </Suspense>
   );
 }

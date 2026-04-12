@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { fetchSystems } from "@/lib/client-cache";
 import type { System } from "@/types/planet";
 
 interface SystemSwitcherProps {
@@ -16,10 +17,7 @@ export function SystemSwitcher({ currentSlug, locale }: SystemSwitcherProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    fetch("/api/systems")
-      .then((r) => r.json())
-      .then((data) => setSystems(data.systems ?? []))
-      .catch(() => {});
+    fetchSystems().then((systems) => setSystems(systems));
   }, []);
 
   const current = systems.find((s) => s.slug === currentSlug);

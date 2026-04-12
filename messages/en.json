@@ -46,7 +46,18 @@
     "publish_error": "Something went wrong. Please try again.",
     "guest_limit_reached": "Guests can only create 1 planet per session. Register for unlimited planets!",
     "name_too_long": "Name must be 40 characters or less",
-    "name_required": "Please name your planet"
+    "name_required": "Please name your planet",
+    "templates_title": "Templates",
+    "templates_locked": "Unlock texture templates with Premium",
+    "templates_upgrade_cta": "Get Premium",
+    "premium_perks_title": "Your Premium Perks",
+    "premium_perk_permanent": "Permanent planet",
+    "premium_perk_orbit": "Priority orbit placement",
+    "premium_perk_speed": "Fastest orbit speed",
+    "premium_perk_types": "All 7 planet types",
+    "premium_perk_colors": "Full color wheel",
+    "upgrade_teaser_title": "Upgrade to Premium",
+    "upgrade_teaser_desc": "Permanent planets · All 7 types · Full color wheel"
   },
   "planet_types": {
     "rocky": "Rocky",

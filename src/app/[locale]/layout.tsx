@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Rubik } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { Navbar } from "@/components/ui/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -47,7 +47,13 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  const messages = await getMessages();
+  // Tells Next.js this locale is statically generated via generateStaticParams,
+  // preventing the "blocking route" warning during prerender.
+  setRequestLocale(locale);
+
+  const messages = locale === "es"
+    ? (await import("@messages/es.json")).default
+    : (await import("@messages/en.json")).default;
 
   return (
     <html lang={locale} className={`${rubik.variable} h-full`}>

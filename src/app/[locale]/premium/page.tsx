@@ -1,11 +1,8 @@
-"use client";
-
-import { use, useState } from "react";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Button } from "@/components/ui/Button";
 import { TierBadge } from "@/components/ui/TierBadge";
-import { useUserTier } from "@/hooks/useUserTier";
+import { PurchaseButton } from "./PurchaseButton";
 
 const FEATURES = [
   "feature_all_types",
@@ -17,33 +14,25 @@ const FEATURES = [
   "feature_textures",
 ] as const;
 
-export default function PremiumPage({ params }: { params: Promise<{ locale: string }> }) {
-  const t = useTranslations("premium");
-  const { tier } = useUserTier();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+export default async function PremiumPage() {
+  const t = await getTranslations("premium");
 
-  async function handlePurchase() {
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch("/api/premium/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(t("checkout_error")); return; }
-      window.location.href = data.init_point;
-    } catch {
-      setError(t("checkout_error"));
-    } finally {
-      setLoading(false);
+  // Check tier server-side — don't rely on client state
+  let tier = "guest";
+  try {
+    const supabase = await getSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase.from("users").select("tier").eq("id", user.id).single();
+      tier = data?.tier ?? "registered";
     }
+  } catch {
+    // Unauthenticated — stay on guest
   }
 
   if (tier === "premium") {
     return (
-      <div className="max-w-[1152px] mx-auto px-4 sm:px-6 py-10 sm:py-20 text-center">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-20 text-center">
         <TierBadge tier="premium" className="mx-auto mb-6" />
         <h1
           className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4"
@@ -57,7 +46,7 @@ export default function PremiumPage({ params }: { params: Promise<{ locale: stri
   }
 
   return (
-    <div className="max-w-[1152px] mx-auto px-4 sm:px-6 py-10 sm:py-20">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-20">
       {/* Header */}
       <div className="text-center mb-10 sm:mb-16">
         <TierBadge tier="premium" className="mb-4" />
@@ -97,16 +86,8 @@ export default function PremiumPage({ params }: { params: Promise<{ locale: stri
               <li key={f} className="flex gap-2">✦ {t(f)}</li>
             ))}
           </ul>
-          {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
-          <Button
-            variant="cta"
-            size="lg"
-            className="w-full"
-            onClick={handlePurchase}
-            loading={loading}
-          >
-            {t("cta_subscribe")}
-          </Button>
+          {/* Client island — only the button needs interactivity */}
+          <PurchaseButton />
         </GlassCard>
       </div>
     </div>

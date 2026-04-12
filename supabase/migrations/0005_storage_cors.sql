@@ -1,26 +1,24 @@
 -- Configure CORS for planet-textures bucket
 -- Three.js TextureLoader requires proper CORS headers for cross-origin image loading
+-- and the browser requires Access-Control-Allow-Origin for fetch() + blob approach
 
-UPDATE storage.buckets
-SET owner = auth.uid()
-WHERE id = 'planet-textures';
-
--- Ensure bucket is truly public with proper CORS support
+-- Ensure bucket is public
 UPDATE storage.buckets
 SET public = true
 WHERE id = 'planet-textures';
 
--- Drop existing read policy if it exists and recreate
+-- Drop existing policies if they exist
 DROP POLICY IF EXISTS "planet-textures public read" ON storage.objects;
+DROP POLICY IF EXISTS "planet-textures service role manage" ON storage.objects;
 
+-- Public read access
 CREATE POLICY "planet-textures public read"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'planet-textures');
 
--- Allow service role to manage all operations
-DROP POLICY IF EXISTS "planet-textures service role manage" ON storage.objects;
-
-CREATE POLICY "planet-textures service role manage"
+-- Allow all authenticated operations (service role uses RLS bypass)
+CREATE POLICY "planet-textures all operations"
   ON storage.objects FOR ALL
   USING (bucket_id = 'planet-textures')
   WITH CHECK (bucket_id = 'planet-textures');
+

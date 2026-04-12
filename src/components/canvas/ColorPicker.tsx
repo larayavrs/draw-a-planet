@@ -13,8 +13,7 @@ export function ColorPicker({ tier }: { tier: UserTier }) {
   const { currentColor, setCurrentColor } = useCanvasStore();
   const [showWheel, setShowWheel] = useState(false);
 
-  const palette =
-    tier === "guest" ? GUEST_PALETTE : REGISTERED_PALETTE;
+  const palette = tier === "guest" ? GUEST_PALETTE : REGISTERED_PALETTE;
 
   return (
     <div className="flex flex-col gap-3">
@@ -22,14 +21,14 @@ export function ColorPicker({ tier }: { tier: UserTier }) {
         {t("color_picker_title")}
       </p>
 
-      {/* Swatches */}
-      <div className="grid grid-cols-8 gap-1.5">
+      {/* Swatches — scrollable on mobile, wrapping on desktop */}
+      <div className="flex flex-wrap gap-1.5 overflow-x-auto">
         {palette.map((color) => (
           <button
             key={color}
             onClick={() => setCurrentColor(color)}
             className={cn(
-              "w-7 h-7 rounded-full transition-all hover:scale-110",
+              "w-7 h-7 rounded-full transition-all shrink-0 hover:scale-110",
               currentColor === color && "ring-2 ring-white ring-offset-1 ring-offset-deep-purple"
             )}
             style={{ backgroundColor: color }}
@@ -57,7 +56,7 @@ export function ColorPicker({ tier }: { tier: UserTier }) {
                   const v = e.target.value;
                   if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setCurrentColor(v);
                 }}
-                className="w-full px-2 py-1 rounded-[6px] bg-border-purple/40 border border-border-purple text-sm text-white font-mono text-center"
+                className="w-full px-2 py-1 rounded-md bg-border-purple/40 border border-border-purple text-sm text-white font-mono text-center"
                 maxLength={7}
               />
             </div>
@@ -73,7 +72,7 @@ export function ColorPicker({ tier }: { tier: UserTier }) {
       {/* Current color preview */}
       <div className="flex items-center gap-2">
         <div
-          className="w-6 h-6 rounded-full border border-white/20"
+          className="w-6 h-6 rounded-full border border-white/20 shrink-0"
           style={{ backgroundColor: currentColor }}
         />
         <span className="text-xs font-mono text-text-muted">{currentColor}</span>
