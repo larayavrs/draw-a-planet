@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyMpSignature } from "@/lib/mercadopago/webhooks";
-import { getPreApprovalClient } from "@/lib/mercadopago/client";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
+import { getPaymentClient } from "@/lib/mercadopago/client";
 
 export async function POST(req: NextRequest) {
   // ── 1. Verify signature ────────────────────────────────────────────────
@@ -10,68 +10,68 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const notificationId = body?.data?.id ?? body?.id ?? "";
+  const type = body?.type ?? body?.action ?? "";
 
   if (!verifyMpSignature({ xSignature, xRequestId, notificationId })) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // ── 2. Only handle subscription events ────────────────────────────────
-  const type = body?.type ?? body?.action;
-  if (!["subscription_preapproval", "payment"].includes(type)) {
-    return NextResponse.json({ ok: true }); // Acknowledge but ignore
+  // ── 2. Only handle payment events (one-time purchases) ─────────────────
+  if (type !== "payment") {
+    return NextResponse.json({ ok: true });
   }
 
   try {
-    const preApproval = getPreApprovalClient();
+    const paymentClient = getPaymentClient();
     const serviceClient = getSupabaseServiceClient();
 
-    // ── 3. Fetch full preapproval from MP API ────────────────────────────
-    const subscriptionId = notificationId;
-    const mpSub = await preApproval.get({ id: subscriptionId });
+    // ── 3. Fetch full payment from MP API ────────────────────────────────
+    const mpPayment = await paymentClient.get({ id: notificationId });
 
-    if (!mpSub || !mpSub.id) {
-      return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
+    if (!mpPayment || !mpPayment.id) {
+      return NextResponse.json({ error: "Payment not found" }, { status: 404 });
     }
 
-    // ── 4. Look up our subscription row ──────────────────────────────────
+    // ── 4. Only process approved payments ────────────────────────────────
+    if (mpPayment.status !== "approved") {
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── 5. Get user_id from metadata ─────────────────────────────────────
+    const metadata = mpPayment.metadata as Record<string, unknown> | undefined;
+    const userId = metadata?.user_id as string | undefined;
+
+    if (!userId) {
+      // Fallback: try to get from payer
+      return NextResponse.json({ error: "No user_id in payment metadata" }, { status: 400 });
+    }
+
+    // ── 6. Check for duplicate (idempotency) ─────────────────────────────
     const { data: existing } = await serviceClient
-      .from("subscriptions")
-      .select("id, user_id")
-      .eq("mercadopago_subscription_id", mpSub.id)
+      .from("premium_purchases")
+      .select("id")
+      .eq("mercadopago_payment_id", String(mpPayment.id))
       .single();
 
-    if (!existing) {
-      return NextResponse.json({ error: "Subscription not in DB" }, { status: 404 });
+    if (existing) {
+      return NextResponse.json({ ok: true }); // Already processed
     }
 
-    // ── 5. Map MP status → our status ─────────────────────────────────────
-    const statusMap: Record<string, string> = {
-      authorized: "active",
-      active: "active",
-      paused: "past_due",
-      cancelled: "cancelled",
-      pending: "pending",
-    };
-    const newStatus = statusMap[mpSub.status ?? ""] ?? "past_due";
-
-    // Compute next period end
-    let periodEnd = new Date(Date.now() + 30 * 86400_000).toISOString();
-    const summarized = mpSub.summarized as Record<string, unknown> | undefined;
-    if (mpSub.auto_recurring?.transaction_amount && summarized?.next_payment_due_date) {
-      periodEnd = new Date(summarized.next_payment_due_date as string).toISOString();
-    }
-
-    // ── 6. Upsert subscription ─────────────────────────────────────────────
+    // ── 7. Record the purchase ───────────────────────────────────────────
     await serviceClient
-      .from("subscriptions")
-      .update({
-        status: newStatus,
-        current_period_end: periodEnd,
-        cancelled_at: newStatus === "cancelled" ? new Date().toISOString() : null,
-      })
-      .eq("id", existing.id);
+      .from("premium_purchases")
+      .insert({
+        user_id: userId,
+        mercadopago_payment_id: String(mpPayment.id),
+        amount: mpPayment.transaction_amount ?? 5.0,
+        status: "completed",
+      });
 
-    // The sync_user_tier DB trigger fires automatically on subscription update.
+    // ── 8. Upgrade user to premium permanently ───────────────────────────
+    await serviceClient
+      .from("users")
+      .update({ tier: "premium", premium_purchased_at: new Date().toISOString() })
+      .eq("id", userId);
 
     return NextResponse.json({ ok: true });
   } catch (err) {

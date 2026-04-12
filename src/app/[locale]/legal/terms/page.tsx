@@ -20,7 +20,7 @@ export default async function TermsPage() {
           </section>
           <section>
             <h2 className="text-white text-lg font-semibold mb-3">3. Account Tiers</h2>
-            <p>Guest accounts are anonymous and ephemeral. Registered accounts are subject to our community guidelines. Premium subscriptions are billed through MercadoPago and are subject to their terms as well as ours. Subscriptions auto-renew until cancelled.</p>
+            <p>Guest accounts are anonymous and ephemeral. Registered accounts are subject to our community guidelines. Premium is a one-time purchase of $5 USD — no subscriptions, no recurring billing, no cancellation needed.</p>
           </section>
           <section>
             <h2 className="text-white text-lg font-semibold mb-3">4. Prohibited Conduct</h2>

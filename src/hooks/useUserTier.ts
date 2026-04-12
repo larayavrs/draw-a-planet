@@ -17,10 +17,19 @@ export function useUserTier(): { tier: UserTier; loading: boolean } {
 
       const { data } = await supabase
         .from("users")
-        .select("tier")
+        .select("tier, premium_purchased_at")
         .eq("id", user.id)
         .single();
-      setTier((data?.tier as UserTier) ?? "registered");
+
+      // Grant premium if tier is set OR if they have a purchase timestamp
+      const purchasedAt = data?.premium_purchased_at;
+      const dbTier = data?.tier as UserTier;
+
+      if (purchasedAt || dbTier === "premium") {
+        setTier("premium");
+      } else {
+        setTier(dbTier ?? "registered");
+      }
       setLoading(false);
     }
 

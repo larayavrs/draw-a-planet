@@ -28,7 +28,7 @@ export default async function PrivacyPage() {
           </section>
           <section>
             <h2 className="text-white text-lg font-semibold mb-3">5. Payment Processing</h2>
-            <p>Premium subscription payments are processed by MercadoPago. We do not store payment card details. MercadoPago's privacy policy governs how they handle your payment information.</p>
+            <p>Premium purchase payments are processed by MercadoPago. We do not store payment card details. MercadoPago's privacy policy governs how they handle your payment information.</p>
           </section>
           <section>
             <h2 className="text-white text-lg font-semibold mb-3">6. Your Rights</h2>

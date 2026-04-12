@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { getSupabaseServerClient, getSupabaseServiceClient } from "@/lib/supabase/server";
-import { getPreApprovalClient } from "@/lib/mercadopago/client";
+import { getPreferenceClient } from "@/lib/mercadopago/client";
 
-const CheckoutSchema = z.object({
-  plan: z.enum(["monthly", "annual"]),
-});
+const PREMIUM_PRICE_USD = 5.0;
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -16,55 +13,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = CheckoutSchema.safeParse(await req.json());
-  if (!body.success) {
-    return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
-  }
-
-  const { plan } = body.data;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
 
-  // Determine pricing
-  const isAnnual = plan === "annual";
-  const amount = isAnnual ? 7.99 : 9.99; // annual = $95.88/yr ÷ 12
-  const frequency = isAnnual ? 12 : 1;
-
   try {
-    const preApproval = getPreApprovalClient();
+    const preference = getPreferenceClient();
 
-    const result = await preApproval.create({
+    const result = await preference.create({
       body: {
-        reason: `Draw-a-Planet Premium — ${isAnnual ? "Annual" : "Monthly"}`,
-        auto_recurring: {
-          frequency,
-          frequency_type: "months",
-          transaction_amount: amount,
-          currency_id: "USD",
+        items: [
+          {
+            id: "premium-onetime",
+            title: "Draw-a-Planet Premium (One-Time)",
+            description: "Unlock all planet types, unlimited colors, permanent planets, and more.",
+            unit_price: PREMIUM_PRICE_USD,
+            quantity: 1,
+            currency_id: "USD",
+          },
+        ],
+        payer: {
+          email: user.email!,
         },
-        back_url: `${appUrl}/premium/success`,
-        payer_email: user.email!,
+        back_urls: {
+          success: `${appUrl}/premium/success`,
+          pending: `${appUrl}/premium`,
+          failure: `${appUrl}/premium`,
+        },
+        auto_return: "approved",
+        notification_url: `${appUrl}/api/webhooks/mercadopago`,
+        metadata: {
+          user_id: user.id,
+        },
       },
     });
 
     if (!result.init_point) {
       throw new Error("No init_point returned");
     }
-
-    // Store pending subscription
-    const serviceClient = getSupabaseServiceClient();
-    await serviceClient.from("subscriptions").upsert(
-      {
-        user_id: user.id,
-        plan,
-        status: "pending",
-        mercadopago_subscription_id: result.id,
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(
-          Date.now() + (isAnnual ? 365 : 30) * 86400_000
-        ).toISOString(),
-      },
-      { onConflict: "mercadopago_subscription_id" }
-    );
 
     return NextResponse.json({ init_point: result.init_point });
   } catch (err) {

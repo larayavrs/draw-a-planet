@@ -39,21 +39,21 @@ export default async function PlanetDetailPage({ params }: { params: Promise<Par
   const system = planet.systems as { name: string; slug: string } | null;
 
   return (
-    <div className="max-w-[1152px] mx-auto px-6 py-12">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+    <div className="max-w-[1152px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-start">
         {/* Planet visual */}
         <div className="flex justify-center">
-          <div className="relative">
+          <div className="relative w-full max-w-[320px] sm:max-w-[400px] mx-auto">
             {planet.texture_url ? (
               <Image
                 src={planet.texture_url}
                 alt={planet.name}
                 width={400}
                 height={400}
-                className="rounded-full border-4 border-border-purple shadow-[0_0_80px_rgba(106,95,193,0.4)]"
+                className="w-full h-auto rounded-full border-4 border-border-purple shadow-[0_0_80px_rgba(106,95,193,0.4)]"
               />
             ) : (
-              <div className="w-[400px] h-[400px] rounded-full bg-border-purple/30 border-4 border-border-purple flex items-center justify-center text-8xl shadow-[0_0_80px_rgba(106,95,193,0.3)]">
+              <div className="w-full aspect-square rounded-full bg-border-purple/30 border-4 border-border-purple flex items-center justify-center text-6xl sm:text-8xl shadow-[0_0_80px_rgba(106,95,193,0.3)]">
                 🪐
               </div>
             )}
@@ -63,9 +63,9 @@ export default async function PlanetDetailPage({ params }: { params: Promise<Par
         </div>
 
         {/* Details */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5 sm:gap-6">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">{planet.name}</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">{planet.name}</h1>
             {creator ? (
               <Link href={`/${locale}/profile/${creator.username}`} className="flex items-center gap-2 text-text-muted hover:text-white transition-colors">
                 {creator.avatar_url && (
@@ -79,7 +79,7 @@ export default async function PlanetDetailPage({ params }: { params: Promise<Par
             )}
           </div>
 
-          <GlassCard className="p-6 grid grid-cols-2 gap-4 text-sm">
+          <GlassCard className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-xs text-text-muted uppercase tracking-wider mb-1">{t("type_label")}</p>
               <p className="text-white font-medium">{tTypes(planet.planet_type as "rocky")}</p>

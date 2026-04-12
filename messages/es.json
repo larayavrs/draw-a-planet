@@ -77,8 +77,7 @@
     "planet_tooltip_anonymous": "Por Anónimo",
     "planet_tooltip_created": "Creado {date}",
     "empty_state": "Aún no hay planetas aquí. ¡Sé el primero en crear uno!",
-    "realtime_badge": "En vivo",
-    "system_switcher_label": "Sistemas"
+    "realtime_badge": "En vivo"
   },
   "planet_detail": {
     "by": "por",
@@ -125,14 +124,11 @@
   },
   "premium": {
     "page_title": "Desbloqueá el Universo Completo",
-    "page_subtitle": "Premium te da todos los tipos de planetas, colores ilimitados y planetas que duran para siempre.",
-    "monthly_label": "Mensual",
-    "annual_label": "Anual",
-    "annual_save": "Ahorrá 20%",
-    "monthly_price": "$9.99/mes",
-    "annual_price": "$95.88/año",
+    "page_subtitle": "Pago único. Premium para siempre. Sin suscripciones, sin cargos ocultos.",
+    "price_label": "$5 USD",
     "cta_subscribe": "Obtener Premium",
-    "current_plan": "Plan actual",
+    "current_plan": "Premium",
+    "already_premium": "¡Ya tenés Premium! ✦",
     "feature_all_types": "Los 7 tipos de planeta",
     "feature_colors": "Espectro completo + hex personalizado",
     "feature_permanent": "Planetas permanentes",
@@ -140,14 +136,14 @@
     "feature_analytics": "Analíticas de planeta",
     "feature_priority": "Posición de órbita prioritaria",
     "feature_textures": "Texturas de planeta personalizadas",
-    "free_tier_title": "Explorador (Gratis)",
+    "free_tier_title": "Gratis",
     "free_feature_types": "3 tipos de planeta (Rocoso, Gaseoso, Helado)",
     "free_feature_colors": "Paleta de 20 colores",
     "free_feature_lifespan": "Vida útil de 30 días",
     "free_feature_unlimited": "Creación ilimitada de planetas",
     "checkout_error": "No se pudo iniciar el pago. Por favor intentá de nuevo.",
     "success_title": "¡Bienvenido a Premium!",
-    "success_subtitle": "Tu universo de planetas acaba de crecer."
+    "success_subtitle": "Tu universo de planetas acaba de crecer. Disfrutá planetas permanentes y todas las funciones — para siempre."
   },
   "settings": {
     "page_title": "Configuración",
@@ -159,9 +155,9 @@
     "danger_zone": "Zona de peligro",
     "delete_account": "Eliminar cuenta",
     "delete_confirm": "¿Estás seguro? Esta acción no se puede deshacer.",
-    "subscription_section": "Suscripción",
-    "cancel_subscription": "Cancelar suscripción",
-    "cancel_confirm": "¿Cancelar tu suscripción Premium?"
+    "premium_section": "Premium",
+    "premium_purchase_date": "Comprado",
+    "premium_permanent": "Premium es un pago único — tuyo para siempre."
   },
   "legal": {
     "terms_title": "Términos de Servicio",

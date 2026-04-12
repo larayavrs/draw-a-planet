@@ -15,12 +15,3 @@ export type StarType =
   | "blue_giant"
   | "white_dwarf"
   | "neutron";
-
-export type SubscriptionStatus =
-  | "active"
-  | "past_due"
-  | "cancelled"
-  | "trialing"
-  | "pending";
-
-export type SubscriptionPlan = "monthly" | "annual";

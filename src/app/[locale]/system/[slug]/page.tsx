@@ -60,7 +60,7 @@ export default async function SystemPage({
   })) as Planet[];
 
   return (
-    <div className="relative overflow-hidden" style={{ height: "calc(100dvh - 140px)" }}>
+    <div className="relative overflow-hidden" style={{ height: "calc(100dvh - 80px)" }}>
       {/* 3D Canvas — fills entire container */}
       <div className="absolute inset-0">
         {planets.length === 0 ? (

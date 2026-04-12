@@ -4,11 +4,11 @@
     "explore": "Explore",
     "systems": "Systems",
     "premium": "Premium",
-    "login": "Log in",
-    "register": "Sign up",
+    "login": "Login",
+    "register": "Register",
     "profile": "Profile",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Logout"
   },
   "landing": {
     "hero_title": "Draw Your Planet",
@@ -17,16 +17,16 @@
     "cta_explore": "Explore Systems",
     "feature_draw_title": "Draw it your way",
     "feature_draw_desc": "Use our intuitive canvas to paint, texture, and design your world from scratch.",
-    "feature_orbit_title": "Watch it orbit",
-    "feature_orbit_desc": "Your planet joins a living solar system in real time alongside planets from everyone else.",
-    "feature_tiers_title": "Unlock the universe",
+    "feature_orbit_title": "Watch it Orbit",
+    "feature_orbit_desc": "Your planet joins a live, real-time solar system alongside others.",
+    "feature_tiers_title": "Unlock the Universe",
     "feature_tiers_desc": "Free accounts get rocky worlds. Premium unlocks gas giants, ocean worlds, lava planets, and more.",
     "system_preview_label": "Live — Alpha Solaris System"
   },
   "draw": {
     "page_title": "Draw a Planet",
     "planet_name_label": "Planet name",
-    "planet_name_placeholder": "Unnamed Planet",
+    "planet_name_placeholder": "Unnamed planet",
     "planet_type_label": "Planet type",
     "system_label": "System",
     "system_placeholder": "Choose a system",
@@ -44,9 +44,9 @@
     "publishing": "Publishing…",
     "publish_success": "Planet published! Watch it orbit.",
     "publish_error": "Something went wrong. Please try again.",
-    "guest_limit_reached": "Guests can only create 1 planet per session. Sign up for unlimited planets!",
+    "guest_limit_reached": "Guests can only create 1 planet per session. Register for unlimited planets!",
     "name_too_long": "Name must be 40 characters or less",
-    "name_required": "Please give your planet a name"
+    "name_required": "Please name your planet"
   },
   "planet_types": {
     "rocky": "Rocky",
@@ -63,8 +63,8 @@
     "premium": "Premium"
   },
   "tier_gate": {
-    "title": "Upgrade to unlock",
-    "guest_to_registered": "Create a free account to access this feature.",
+    "title": "Upgrade to Unlock",
+    "guest_to_registered": "Create a free account to unlock this feature.",
     "registered_to_premium": "Upgrade to Premium to unlock this feature.",
     "cta_register": "Sign up free",
     "cta_premium": "Get Premium"
@@ -77,8 +77,7 @@
     "planet_tooltip_anonymous": "By Anonymous",
     "planet_tooltip_created": "Created {date}",
     "empty_state": "No planets here yet. Be the first to create one!",
-    "realtime_badge": "Live",
-    "system_switcher_label": "Systems"
+    "realtime_badge": "Live"
   },
   "planet_detail": {
     "by": "by",
@@ -98,9 +97,9 @@
     "joined": "Joined {date}"
   },
   "auth": {
-    "login_title": "Welcome back",
-    "login_subtitle": "Log in to your account",
-    "register_title": "Join the universe",
+    "login_title": "Welcome Back",
+    "login_subtitle": "Sign in to your account",
+    "register_title": "Join the Universe",
     "register_subtitle": "Create your free account",
     "email_label": "Email",
     "email_placeholder": "you@example.com",
@@ -108,7 +107,7 @@
     "password_placeholder": "••••••••",
     "username_label": "Username",
     "username_placeholder": "your_username",
-    "login_btn": "Log in",
+    "login_btn": "Sign in",
     "register_btn": "Create account",
     "or_continue": "or continue with",
     "google": "Google",
@@ -116,8 +115,8 @@
     "no_account": "Don't have an account?",
     "has_account": "Already have an account?",
     "sign_up_link": "Sign up",
-    "sign_in_link": "Log in",
-    "forgot_password": "Forgot password?",
+    "sign_in_link": "Sign in",
+    "forgot_password": "Forgot your password?",
     "error_invalid_credentials": "Invalid email or password.",
     "error_email_taken": "This email is already registered.",
     "error_username_taken": "This username is taken.",
@@ -125,14 +124,11 @@
   },
   "premium": {
     "page_title": "Unlock the Full Universe",
-    "page_subtitle": "Premium gives you every planet type, unlimited colors, and planets that last forever.",
-    "monthly_label": "Monthly",
-    "annual_label": "Annual",
-    "annual_save": "Save 20%",
-    "monthly_price": "$9.99/mo",
-    "annual_price": "$95.88/yr",
+    "page_subtitle": "One-time purchase. Premium forever. No subscriptions, no hidden fees.",
+    "price_label": "$5 USD",
     "cta_subscribe": "Get Premium",
-    "current_plan": "Current plan",
+    "current_plan": "Premium",
+    "already_premium": "You already have Premium! ✦",
     "feature_all_types": "All 7 planet types",
     "feature_colors": "Full color spectrum + custom hex",
     "feature_permanent": "Permanent planets",
@@ -140,14 +136,14 @@
     "feature_analytics": "Planet analytics",
     "feature_priority": "Priority orbit placement",
     "feature_textures": "Custom planet textures",
-    "free_tier_title": "Explorer (Free)",
+    "free_tier_title": "Free",
     "free_feature_types": "3 planet types (Rocky, Gaseous, Icy)",
     "free_feature_colors": "20-color palette",
     "free_feature_lifespan": "30-day planet lifespan",
     "free_feature_unlimited": "Unlimited planet creation",
     "checkout_error": "Could not initiate checkout. Please try again.",
     "success_title": "Welcome to Premium!",
-    "success_subtitle": "Your planet universe just got bigger."
+    "success_subtitle": "Your planet universe just got bigger. Enjoy permanent planets and all features — forever."
   },
   "settings": {
     "page_title": "Settings",
@@ -159,9 +155,9 @@
     "danger_zone": "Danger zone",
     "delete_account": "Delete account",
     "delete_confirm": "Are you sure? This action cannot be undone.",
-    "subscription_section": "Subscription",
-    "cancel_subscription": "Cancel subscription",
-    "cancel_confirm": "Cancel your Premium subscription?"
+    "premium_section": "Premium",
+    "premium_purchase_date": "Purchased",
+    "premium_permanent": "Premium is a one-time purchase — yours forever."
   },
   "legal": {
     "terms_title": "Terms of Service",
@@ -172,8 +168,8 @@
     "not_found": "Page not found",
     "not_found_desc": "The page you're looking for doesn't exist.",
     "server_error": "Something went wrong",
-    "server_error_desc": "We're having trouble right now. Please try again.",
-    "unauthorized": "You need to log in to view this page.",
+    "server_error_desc": "We're having issues right now. Please try again.",
+    "unauthorized": "You need to sign in to view this page.",
     "back_home": "Back to home"
   },
   "common": {

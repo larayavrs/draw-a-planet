@@ -34,31 +34,31 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
     .limit(60);
 
   return (
-    <div className="max-w-[1152px] mx-auto px-6 py-12">
+    <div className="max-w-[1152px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
       {/* Profile header */}
-      <GlassCard className="p-8 mb-8 flex items-start gap-6">
+      <GlassCard className="p-5 sm:p-8 mb-6 sm:mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
         {user.avatar_url ? (
           <Image
             src={user.avatar_url}
             alt={user.username}
             width={80}
             height={80}
-            className="rounded-full border-2 border-border-purple"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-border-purple shrink-0"
           />
         ) : (
-          <div className="w-20 h-20 rounded-full bg-border-purple/60 flex items-center justify-center text-3xl border-2 border-border-purple">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-border-purple/60 flex items-center justify-center text-2xl sm:text-3xl border-2 border-border-purple shrink-0">
             🪐
           </div>
         )}
-        <div className="flex-1">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-white">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-wrap justify-center sm:justify-start">
+            <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
               {user.display_name ?? user.username}
             </h1>
             <TierBadge tier={user.tier as UserTier} />
           </div>
           <p className="text-text-muted text-sm mt-0.5">@{user.username}</p>
-          {user.bio && <p className="text-text-gray text-sm mt-2 max-w-lg">{user.bio}</p>}
+          {user.bio && <p className="text-text-gray text-sm mt-2 max-w-lg line-clamp-3">{user.bio}</p>}
           <p className="text-text-muted text-xs mt-2">
             {t("joined", { date: new Date(user.created_at).toLocaleDateString() })}
           </p>
@@ -66,11 +66,11 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
       </GlassCard>
 
       {/* Planets grid */}
-      <h2 className="text-lg font-semibold text-white mb-4">{t("planets_tab")}</h2>
+      <h2 className="text-base sm:text-lg font-semibold text-white mb-4">{t("planets_tab")}</h2>
       {(!planets || planets.length === 0) ? (
         <p className="text-text-muted">{t("no_planets")}</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
           {(planets as Array<{ id: string; name: string; texture_url: string | null }>).map((planet) => (
             <Link key={planet.id} href={`/${locale}/planet/${planet.id}`}>
               <GlassCard hover className="overflow-hidden aspect-square group cursor-pointer">
@@ -81,9 +81,10 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
                     width={128}
                     height={128}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl bg-border-purple/30">
+                  <div className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl bg-border-purple/30">
                     🪐
                   </div>
                 )}

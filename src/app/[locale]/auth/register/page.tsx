@@ -49,11 +49,11 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <GlassCard className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <span className="text-5xl">🪐</span>
-          <h1 className="text-2xl font-bold text-white mt-3">{t("register_title")}</h1>
+    <div className="min-h-[80dvh] flex items-center justify-center px-4 py-12">
+      <GlassCard className="w-full max-w-md p-6 sm:p-8">
+        <div className="text-center mb-6 sm:mb-8">
+          <span className="text-4xl sm:text-5xl">🪐</span>
+          <h1 className="text-xl sm:text-2xl font-bold text-white mt-3">{t("register_title")}</h1>
           <p className="text-text-muted text-sm mt-1">{t("register_subtitle")}</p>
         </div>
 
@@ -98,7 +98,7 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
           </Button>
         </form>
 
-        <div className="my-6 flex items-center gap-3 text-text-muted text-xs">
+        <div className="my-5 sm:my-6 flex items-center gap-3 text-text-muted text-xs">
           <div className="flex-1 h-px bg-border-purple" />
           {t("or_continue")}
           <div className="flex-1 h-px bg-border-purple" />
@@ -113,7 +113,7 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
           </Button>
         </div>
 
-        <p className="mt-6 text-center text-sm text-text-muted">
+        <p className="mt-5 sm:mt-6 text-center text-sm text-text-muted">
           {t("has_account")}{" "}
           <Link href={`/${locale}/auth/login`} className="text-sentry-purple hover:text-white transition-colors">
             {t("sign_in_link")}
