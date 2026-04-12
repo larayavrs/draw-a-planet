@@ -42,7 +42,7 @@ async function LandingContent({ params }: Props) {
         >
           <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] md:w-[600px] md:h-[600px] rounded-full bg-deep-violet/20 blur-[80px] sm:blur-[120px]" />
           <div className="absolute bottom-1/4 right-1/4 w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] md:w-[400px] md:h-[400px] rounded-full bg-sentry-purple/15 blur-[60px] sm:blur-[100px]" />
-          <div className="absolute top-1/3 right-1/3 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[300px] md:h-[300px] rounded-full bg-lime/5 blur-[40px] sm:blur-[80px]" />
+          <div className="absolute top-1/3 right-1/3 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[300px] md:h-[300px] rounded-full bg-lime/5 blur-2xl sm:blur-[80px]" />
         </div>
 
         {/* Live badge */}
@@ -65,37 +65,53 @@ async function LandingContent({ params }: Props) {
 
         <div className="flex flex-col sm:flex-row items-center gap-4 relative z-10">
           <Link href={`${base}/draw`}>
-            <Button variant="cta" size="lg" className="min-w-[180px] max-w-full w-full sm:w-auto">
+            <Button
+              variant="default"
+              size="lg"
+              className="min-w-[180px] max-w-full w-full sm:w-auto"
+            >
               {t("cta_draw")}
             </Button>
           </Link>
           <Link href={`${base}/system/alpha-solaris`}>
-            <Button variant="glass" size="lg" className="min-w-[180px] max-w-full w-full sm:w-auto">
+            <Button
+              variant="default"
+              size="lg"
+              className="min-w-[180px] max-w-full w-full sm:w-auto"
+            >
               {t("cta_explore")}
             </Button>
           </Link>
         </div>
       </section>
 
-      {/* ── Features ─────────────────────────────────────────────────────────── */}
-      <section className="max-w-[1152px] mx-auto px-4 sm:px-6 py-12 sm:py-24">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-24">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
           {features.map((f, i) => (
-            <GlassCard key={i} hover className="p-5 sm:p-8 flex flex-col gap-3 sm:gap-4">
+            <GlassCard
+              key={i}
+              hover
+              className="p-5 sm:p-8 flex flex-col gap-3 sm:gap-4"
+            >
               <span className="text-3xl sm:text-4xl">{f.icon}</span>
-              <h3 className="text-base sm:text-lg font-semibold text-white">{f.title}</h3>
-              <p className="text-text-muted text-sm leading-relaxed">{f.desc}</p>
+              <h3 className="text-base sm:text-lg font-semibold text-white">
+                {f.title}
+              </h3>
+              <p className="text-text-muted text-sm leading-relaxed">
+                {f.desc}
+              </p>
             </GlassCard>
           ))}
         </div>
       </section>
 
-      {/* ── Tier comparison ─────────────────────────────────────────────────── */}
-      <section className="max-w-[1152px] mx-auto px-4 sm:px-6 pb-12 sm:pb-24">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-12 sm:pb-24">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Guest */}
           <GlassCard className="p-5 sm:p-7 flex flex-col gap-3">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Guest</p>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              Guest
+            </p>
             <p className="text-2xl font-bold text-white">Free</p>
             <ul className="flex flex-col gap-2 text-sm text-text-muted mt-2">
               <li>🪨 1 Rocky planet / session</li>
@@ -106,7 +122,9 @@ async function LandingContent({ params }: Props) {
 
           {/* Explorer */}
           <GlassCard className="p-7 flex flex-col gap-3 border-sentry-purple/50">
-            <p className="text-xs font-semibold text-sentry-purple uppercase tracking-wider">Explorer</p>
+            <p className="text-xs font-semibold text-sentry-purple uppercase tracking-wider">
+              Explorer
+            </p>
             <p className="text-2xl font-bold text-white">Free Account</p>
             <ul className="flex flex-col gap-2 text-sm text-text-muted mt-2">
               <li>🌀 3 planet types</li>
@@ -116,13 +134,17 @@ async function LandingContent({ params }: Props) {
               <li>🌍 Choose your system</li>
             </ul>
             <Link href={`${base}/auth/register`} className="mt-auto">
-              <Button variant="glass" size="md" className="w-full mt-4">Sign up free</Button>
+              <Button variant="default" size="lg" className="w-full mt-4">
+                Sign up free
+              </Button>
             </Link>
           </GlassCard>
 
           {/* Premium */}
           <GlassCard className="p-7 flex flex-col gap-3 border-lime/40 bg-lime/5">
-            <p className="text-xs font-semibold text-lime uppercase tracking-wider">✦ Premium</p>
+            <p className="text-xs font-semibold text-lime uppercase tracking-wider">
+              ✦ Premium
+            </p>
             <p className="text-2xl font-bold text-white">$5 one-time</p>
             <ul className="flex flex-col gap-2 text-sm text-text-muted mt-2">
               <li>🪐 All 7 planet types</li>
@@ -133,7 +155,9 @@ async function LandingContent({ params }: Props) {
               <li>⚡ Priority orbit placement</li>
             </ul>
             <Link href={`${base}/premium`} className="mt-auto">
-              <Button variant="cta" size="md" className="w-full mt-4">Get Premium</Button>
+              <Button variant="default" size="lg" className="w-full mt-4">
+                Get Premium
+              </Button>
             </Link>
           </GlassCard>
         </div>
