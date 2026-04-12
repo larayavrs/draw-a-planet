@@ -46,31 +46,33 @@ export function OrbitingPlanet({ planet, getElapsed, isFocused, onClick }: Orbit
 
   // Load texture from Supabase Storage URL
   useEffect(() => {
-    if (!planet.texture_url) {
-      console.log(`[OrbitingPlanet] No texture_url for "${planet.name}" (id: ${planet.id}), using base color`);
-      return;
+    if (!planet.texture_url) return;
+    if (planet.texture_url.includes(planet.id)) {
+      // This planet has a texture — load it
+      console.log(`[texture] "${planet.name}" has texture URL:`, planet.texture_url);
     }
-    console.log(`[OrbitingPlanet] Loading texture for "${planet.name}" from:`, planet.texture_url);
-    const loader = new THREE.TextureLoader();
-    loader.setCrossOrigin("anonymous");
-    loader.load(
-      planet.texture_url,
-      (t) => {
-        t.colorSpace = THREE.SRGBColorSpace;
-        t.needsUpdate = true;
-        setTexture(t);
-        console.log(`[OrbitingPlanet] Texture loaded OK for "${planet.name}"`);
-      },
-      (xhr) => {
-        if (xhr.lengthComputable) {
-          console.log(`[OrbitingPlanet] ${((xhr.loaded / xhr.total) * 100).toFixed(0)}% loaded for "${planet.name}"`);
-        }
-      },
-      (err) => {
-        console.warn(`[OrbitingPlanet] FAILED to load texture for "${planet.name}":`, planet.texture_url, err);
-      }
-    );
-  }, [planet.texture_url, planet.name]);
+
+    let cancelled = false;
+
+    // Try loading the URL directly as an Image — no blob fetch, no CORS
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      if (cancelled) return;
+      console.log(`[texture] Image OK for "${planet.name}": ${img.naturalWidth}x${img.naturalHeight}`);
+      const t = new THREE.Texture(img);
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.needsUpdate = true;
+      setTexture(t);
+    };
+    img.onerror = () => {
+      if (cancelled) return;
+      console.warn(`[texture] Image failed for "${planet.name}" (${planet.id}) URL:`, planet.texture_url);
+    };
+    img.src = planet.texture_url;
+
+    return () => { cancelled = true; };
+  }, [planet.texture_url, planet.name, planet.id]);
 
   const orbitParams = {
     radius: planet.orbit_radius,

@@ -59,6 +59,7 @@ export function PlanetCanvas() {
 
       fabricRef.current = fc;
       store.setFabricRef(fabricRef);
+      store.setCanvasEl(canvasEl);
     });
 
     // Cleanup runs synchronously on unmount (StrictMode teardown included).

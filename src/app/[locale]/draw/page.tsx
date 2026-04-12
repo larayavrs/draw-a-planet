@@ -51,14 +51,30 @@ export default function DrawPage({
       // Export canvas as PNG data URL
       const fc = store.fabricRef.current as {
         toJSON: () => unknown;
-        getElement: () => HTMLCanvasElement;
       };
       const fabricJson = fc.toJSON() as Record<string, unknown>;
       const canvas_data = { version: 1, width: 512, height: 512, ...fabricJson };
 
-      // Capture the texture directly from the Fabric DOM canvas element.
-      // This avoids Fabric v7 toDataURL quirks with clipPath.
-      const srcCanvas = fc.getElement();
+      // Capture the texture directly from the DOM <canvas> element that Fabric
+      // renders on. This is the most reliable approach — bypasses all Fabric
+      // export APIs and grabs pixels directly from the rendered canvas.
+      const srcCanvas = store.canvasEl?.current;
+      if (!srcCanvas) {
+        store.setPublishError("Canvas not found. Please try again.");
+        store.setIsPublishing(false);
+        return;
+      }
+
+      // Wait one frame to ensure canvas is fully rendered
+      await new Promise((r) => requestAnimationFrame(r));
+
+      // Debug: check canvas content
+      const testCtx = srcCanvas.getContext("2d");
+      if (testCtx) {
+        const pixel = testCtx.getImageData(256, 256, 1, 1).data;
+        console.log(`[publish] Canvas pixel at center: rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${pixel[3]})`);
+      }
+
       const size = 256;
       const tmp = document.createElement("canvas");
       tmp.width = size;

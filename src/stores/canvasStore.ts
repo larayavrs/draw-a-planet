@@ -8,6 +8,10 @@ interface CanvasState {
   fabricRef: React.RefObject<unknown> | null;
   setFabricRef: (ref: React.RefObject<unknown>) => void;
 
+  // Direct DOM ref to the actual <canvas> element Fabric renders on
+  canvasEl: React.RefObject<HTMLCanvasElement | null> | null;
+  setCanvasEl: (ref: React.RefObject<HTMLCanvasElement | null>) => void;
+
   // Drawing
   tool: DrawTool;
   setTool: (tool: DrawTool) => void;
@@ -38,6 +42,9 @@ interface CanvasState {
 export const useCanvasStore = create<CanvasState>((set) => ({
   fabricRef: null,
   setFabricRef: (ref) => set({ fabricRef: ref }),
+
+  canvasEl: null,
+  setCanvasEl: (ref) => set({ canvasEl: ref }),
 
   tool: "brush",
   setTool: (tool) => set({ tool }),
