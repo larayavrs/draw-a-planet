@@ -30,10 +30,11 @@ export default function DrawPage({
   const t = useTranslations("draw");
   const router = useRouter();
   const { tier, loading: tierLoading } = useUserTier();
-  const { token: guestToken } = useGuestSession();
+  const { token: guestToken, loading: guestLoading } = useGuestSession();
   const store = useCanvasStore();
   const [systems, setSystems] = useState<System[]>([]);
   const [activeTemplate, setActiveTemplate] = useState<TemplateId | null>(null);
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchSystems().then((systems) => {
@@ -43,9 +44,29 @@ export default function DrawPage({
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
   async function handlePublish() {
     if (!store.planetName.trim()) {
       store.setPublishError(t("name_required"));
+      return;
+    }
+    if (!store.selectedSystemId) {
+      store.setPublishError(t("publish_error"));
+      return;
+    }
+    if (tier === "guest" && guestLoading) {
+      store.setPublishError(t("publish_error"));
+      return;
+    }
+    if (tier === "guest" && !guestToken) {
+      store.setPublishError(t("publish_error"));
       return;
     }
     if (!store.actions?.exportCanvas) {
@@ -59,13 +80,16 @@ export default function DrawPage({
     try {
       const exported = store.actions.exportCanvas();
       if (!exported) {
+        console.error("[publish] exportCanvas() returned null");
         store.setPublishError(t("publish_error"));
         return;
       }
 
       const { canvas_data, texture_data_url } = exported;
 
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
       if (tier === "guest" && guestToken) {
         headers["Authorization"] = `Bearer ${guestToken}`;
       }
@@ -85,16 +109,22 @@ export default function DrawPage({
       const data = await res.json();
 
       if (!res.ok) {
+        console.error("[publish] API error:", res.status, data);
         store.setPublishError(
-          data.error === "guest_limit_reached" ? t("guest_limit_reached") : t("publish_error")
+          data.error === "guest_limit_reached"
+            ? t("guest_limit_reached")
+            : t("publish_error"),
         );
         return;
       }
 
       store.setPublishedPlanetId(data.planet.id);
-      const systemSlug = systems.find((s) => s.id === store.selectedSystemId)?.slug ?? "alpha-solaris";
+      const systemSlug =
+        systems.find((s) => s.id === store.selectedSystemId)?.slug ??
+        "alpha-solaris";
       router.push(`/${locale}/system/${systemSlug}`);
-    } catch {
+    } catch (err) {
+      console.error("[publish] unexpected error:", err);
       store.setPublishError(t("publish_error"));
     } finally {
       store.setIsPublishing(false);
@@ -141,7 +171,7 @@ export default function DrawPage({
 
           {/* Center: Canvas */}
           <div className="flex-1 flex items-start justify-center pt-2">
-            {!tierLoading && <PlanetCanvas tier={tier} />}
+            {!tierLoading && isDesktop === true && <PlanetCanvas tier={tier} />}
           </div>
 
           {/* Right: Publish panel */}
@@ -161,7 +191,9 @@ export default function DrawPage({
         <div className="flex flex-col gap-4 lg:hidden">
           {/* Canvas — centered, scales automatically */}
           <div className="flex justify-center">
-            {!tierLoading && <PlanetCanvas tier={tier} />}
+            {!tierLoading && isDesktop === false && (
+              <PlanetCanvas tier={tier} />
+            )}
           </div>
 
           {/* Tools row */}
@@ -245,7 +277,12 @@ function PublishPanel({
 
       {/* Planet type — desktop only (mobile has its own section) */}
       <div className="hidden lg:block">
-        {!tierLoading && <PlanetTypeSelector tier={tier as "guest" | "registered" | "premium"} locale={locale} />}
+        {!tierLoading && (
+          <PlanetTypeSelector
+            tier={tier as "guest" | "registered" | "premium"}
+            locale={locale}
+          />
+        )}
       </div>
 
       {/* System selector (registered+) */}
@@ -268,7 +305,8 @@ function PublishPanel({
       )}
 
       {/* Premium perks / upsell */}
-      {!tierLoading && (isPremium ? <PremiumPerks /> : <UpgradeTeaser locale={locale} />)}
+      {!tierLoading &&
+        (isPremium ? <PremiumPerks /> : <UpgradeTeaser locale={locale} />)}
 
       {/* Error */}
       {store.publishError && (
@@ -316,7 +354,10 @@ function PremiumPerks() {
       </p>
       <ul className="flex flex-col gap-1">
         {perks.map((perk) => (
-          <li key={perk} className="flex items-center gap-1.5 text-xs text-text-muted">
+          <li
+            key={perk}
+            className="flex items-center gap-1.5 text-xs text-text-muted"
+          >
             <span className="text-lime text-[10px]">✦</span>
             {perk}
           </li>
@@ -336,7 +377,10 @@ function UpgradeTeaser({ locale }: { locale: string }) {
         {t("upgrade_teaser_title")}
       </p>
       <p className="text-xs text-text-muted/70">{t("upgrade_teaser_desc")}</p>
-      <Link href={`/${locale}/premium`} className="text-xs font-semibold text-lime hover:text-lime/80 transition-colors">
+      <Link
+        href={`/${locale}/premium`}
+        className="text-xs font-semibold text-lime hover:text-lime/80 transition-colors"
+      >
         {t("templates_upgrade_cta")} →
       </Link>
     </div>
