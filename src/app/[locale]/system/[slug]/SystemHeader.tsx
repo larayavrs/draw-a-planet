@@ -13,7 +13,13 @@ interface SystemHeaderProps {
   realtimeBadgeLabel: string;
 }
 
-export function SystemHeader({ system, planetCount, locale, planetsCountLabel, realtimeBadgeLabel }: SystemHeaderProps) {
+export function SystemHeader({
+  system,
+  planetCount,
+  locale,
+  planetsCountLabel,
+  realtimeBadgeLabel,
+}: SystemHeaderProps) {
   return (
     <div className="border-b border-border-purple bg-darker-purple/60 backdrop-blur-sm px-3 py-2 md:px-6 md:py-3 flex items-center justify-between gap-2">
       <div className="flex items-center gap-2 md:gap-4 min-w-0">
@@ -32,7 +38,9 @@ export function SystemHeader({ system, planetCount, locale, planetsCountLabel, r
         </span>
       </div>
       <Link href={`/${locale}/draw`}>
-        <Button variant="cta" size="sm">✏ Draw</Button>
+        <Button variant="cta" size="sm">
+          ✏ Draw
+        </Button>
       </Link>
     </div>
   );

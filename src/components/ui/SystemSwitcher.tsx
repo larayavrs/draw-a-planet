@@ -23,10 +23,16 @@ export function SystemSwitcher({ currentSlug, locale }: SystemSwitcherProps) {
   const current = systems.find((s) => s.slug === currentSlug);
 
   const handleSelect = (slug: string) => {
+    if (slug === currentSlug) {
+      setOpen(false);
+      return;
+    }
+
     setOpen(false);
     // Replace the slug segment in the current pathname
     const newPath = pathname.replace(/\/system\/[^/]+/, `/system/${slug}`);
-    router.push(newPath);
+    router.replace(newPath);
+    router.refresh();
   };
 
   if (systems.length === 0) return null;
@@ -38,9 +44,21 @@ export function SystemSwitcher({ currentSlug, locale }: SystemSwitcherProps) {
         className="flex items-center gap-1.5 rounded-lg border border-border-purple bg-deep-purple/80 px-2 py-1.5 md:px-3 text-xs md:text-sm text-white hover:bg-sentry-purple/60 transition-colors shrink-0"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-lime animate-pulse shrink-0" />
-        <span className="font-medium truncate max-w-[100px] md:max-w-none">{current?.name ?? systems[0]?.name}</span>
-        <svg className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        <span className="font-medium truncate max-w-[100px] md:max-w-none">
+          {current?.name ?? systems[0]?.name}
+        </span>
+        <svg
+          className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
@@ -66,7 +84,9 @@ export function SystemSwitcher({ currentSlug, locale }: SystemSwitcherProps) {
                   {s.name}
                 </span>
                 {s.is_default && (
-                  <span className="text-[10px] uppercase tracking-wider text-lime font-semibold">Default</span>
+                  <span className="text-[10px] uppercase tracking-wider text-lime font-semibold">
+                    Default
+                  </span>
                 )}
               </button>
             ))}
