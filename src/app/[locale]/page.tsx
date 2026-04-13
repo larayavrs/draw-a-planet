@@ -33,9 +33,7 @@ async function LandingContent({ params }: Props) {
 
   return (
     <div className="overflow-hidden">
-      {/* ── Hero ────────────────────────────────────────────────────────────── */}
       <section className="relative min-h-[90dvh] flex flex-col items-center justify-center text-center px-4 py-16 sm:px-6 sm:py-24">
-        {/* Ambient background blobs — responsive sizing */}
         <div
           className="absolute inset-0 pointer-events-none overflow-hidden"
           aria-hidden="true"
@@ -45,17 +43,7 @@ async function LandingContent({ params }: Props) {
           <div className="absolute top-1/3 right-1/3 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[300px] md:h-[300px] rounded-full bg-lime/5 blur-2xl sm:blur-[80px]" />
         </div>
 
-        {/* Live badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-lime/30 bg-lime/10 text-lime text-xs font-semibold uppercase tracking-wider mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-lime animate-pulse" />
-          {t("system_preview_label")}
-        </div>
-
-        {/* Hero heading — Dammit Sans */}
-        <h1
-          className="font-display text-6xl sm:text-7xl md:text-8xl font-bold text-white leading-tight mb-6 relative z-10"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
+        <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold text-foreground leading-tight mb-6 relative z-10">
           {t("hero_title")}
         </h1>
 

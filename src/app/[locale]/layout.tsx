@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Rubik } from "next/font/google";
+
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
@@ -10,7 +10,16 @@ import { ThemeProvider } from "@/providers/theme";
 
 import { Navbar } from "@/components/ui/Navbar";
 import { Footer } from "@/components/layout/Footer";
+
+import { Space_Grotesk } from "next/font/google";
+
 import "../globals.css";
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -55,7 +64,9 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col antialiased h-full font-sans">
+      <body
+        className={`${spaceGrotesk.className} min-h-full flex flex-col antialiased h-full`}
+      >
         <Suspense>
           <NextIntlClientProvider messages={messages}>
             <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
