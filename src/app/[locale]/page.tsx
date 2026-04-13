@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import Link from "next/link";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { Button } from "@/components/ui/Button";
+import { GlassCard } from "@/components/layout/GlassCard";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   params: Promise<{ locale: string }>;

@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { TierBadge } from "@/components/ui/TierBadge";
+import { GlassCard } from "@/components/layout/GlassCard";
+import { TierBadge } from "@/components/layout/TierBadge";
 import { PurchaseButton } from "./PurchaseButton";
 
 const FEATURES = [
@@ -21,9 +21,15 @@ export default async function PremiumPage() {
   let tier = "guest";
   try {
     const supabase = await getSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
-      const { data } = await supabase.from("users").select("tier").eq("id", user.id).single();
+      const { data } = await supabase
+        .from("users")
+        .select("tier")
+        .eq("id", user.id)
+        .single();
       tier = data?.tier ?? "registered";
     }
   } catch {
@@ -40,7 +46,9 @@ export default async function PremiumPage() {
         >
           {t("already_premium")}
         </h1>
-        <p className="text-text-muted text-lg max-w-xl mx-auto">{t("success_subtitle")}</p>
+        <p className="text-text-muted text-lg max-w-xl mx-auto">
+          {t("success_subtitle")}
+        </p>
       </div>
     );
   }
@@ -56,7 +64,9 @@ export default async function PremiumPage() {
         >
           {t("page_title")}
         </h1>
-        <p className="text-text-muted text-base sm:text-lg max-w-xl mx-auto">{t("page_subtitle")}</p>
+        <p className="text-text-muted text-base sm:text-lg max-w-xl mx-auto">
+          {t("page_subtitle")}
+        </p>
       </div>
 
       {/* Cards */}
@@ -77,13 +87,23 @@ export default async function PremiumPage() {
 
         {/* Premium */}
         <GlassCard className="p-6 sm:p-8 border-lime/40 bg-lime/5 relative overflow-hidden">
-          <div className="absolute top-4 right-4 text-lime text-2xl animate-pulse">✦</div>
-          <p className="text-xs font-semibold text-lime uppercase tracking-wider mb-2">Premium</p>
-          <p className="text-3xl font-bold text-white mb-1">{t("price_label")}</p>
-          <p className="text-xs text-text-muted mb-6">one-time payment · yours forever</p>
+          <div className="absolute top-4 right-4 text-lime text-2xl animate-pulse">
+            ✦
+          </div>
+          <p className="text-xs font-semibold text-lime uppercase tracking-wider mb-2">
+            Premium
+          </p>
+          <p className="text-3xl font-bold text-white mb-1">
+            {t("price_label")}
+          </p>
+          <p className="text-xs text-text-muted mb-6">
+            one-time payment · yours forever
+          </p>
           <ul className="flex flex-col gap-3 text-sm text-text-muted mb-8">
             {FEATURES.map((f) => (
-              <li key={f} className="flex gap-2">✦ {t(f)}</li>
+              <li key={f} className="flex gap-2">
+                ✦ {t(f)}
+              </li>
             ))}
           </ul>
           {/* Client island — only the button needs interactivity */}

@@ -4,7 +4,8 @@ import type { UserTier } from "@/types/tier";
 
 const tierStyles: Record<UserTier, string> = {
   guest: "bg-border-purple/60 text-text-muted border-transparent rounded-full",
-  registered: "bg-sentry-purple/20 text-sentry-purple border border-sentry-purple/40 rounded-full",
+  registered:
+    "bg-sentry-purple/20 text-sentry-purple border border-sentry-purple/40 rounded-full",
   premium: "bg-lime/20 text-lime border border-lime/40 rounded-full",
 };
 
@@ -14,14 +15,20 @@ const tierLabels: Record<UserTier, string> = {
   premium: "Premium",
 };
 
-export function TierBadge({ tier, className }: { tier: UserTier; className?: string }) {
+export function TierBadge({
+  tier,
+  className,
+}: {
+  tier: UserTier;
+  className?: string;
+}) {
   return (
     <Badge
       variant="outline"
       className={cn(
         "px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider",
         tierStyles[tier],
-        className
+        className,
       )}
     >
       {tier === "premium" && <span className="mr-1">✦</span>}

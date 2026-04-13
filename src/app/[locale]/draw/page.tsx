@@ -9,8 +9,8 @@ import { BrushToolbar } from "@/components/canvas/BrushToolbar";
 import { ColorPicker } from "@/components/canvas/ColorPicker";
 import { PlanetTypeSelector } from "@/components/canvas/PlanetTypeSelector";
 import { PlanetTemplates } from "@/components/canvas/PlanetTemplates";
-import { Button } from "@/components/ui/Button";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/layout/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -365,10 +365,20 @@ function PremiumPerks() {
 
 // ─── Cosmetic effect picker ───────────────────────────────────────────────────
 
-const EFFECTS: { id: CosmeticEffect; label: string; icon: string; desc: string }[] = [
-  { id: "sparkles", label: "Destellos", icon: "✦", desc: "Partículas brillantes" },
-  { id: "rings",    label: "Anillos",   icon: "⬭", desc: "Anillos de Saturno" },
-  { id: "aura",     label: "Aura",      icon: "◎", desc: "Halo luminoso" },
+const EFFECTS: {
+  id: CosmeticEffect;
+  label: string;
+  icon: string;
+  desc: string;
+}[] = [
+  {
+    id: "sparkles",
+    label: "Destellos",
+    icon: "✦",
+    desc: "Partículas brillantes",
+  },
+  { id: "rings", label: "Anillos", icon: "⬭", desc: "Anillos de Saturno" },
+  { id: "aura", label: "Aura", icon: "◎", desc: "Halo luminoso" },
 ];
 
 function CosmeticEffectPicker() {

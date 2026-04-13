@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { GlassCard } from "@/components/layout/GlassCard";
 import Link from "next/link";
 
 export default async function PremiumSuccessPage({

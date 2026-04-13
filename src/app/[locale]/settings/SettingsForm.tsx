@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/Button";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { TierBadge } from "@/components/ui/TierBadge";
+import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/layout/GlassCard";
+import { TierBadge } from "@/components/layout/TierBadge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,7 +49,11 @@ export function SettingsForm({
       return;
     }
 
-    if (username.length < 3 || username.length > 30 || !USERNAME_REGEX.test(username)) {
+    if (
+      username.length < 3 ||
+      username.length > 30 ||
+      !USERNAME_REGEX.test(username)
+    ) {
       setUsernameStatus("invalid");
       return;
     }
@@ -165,15 +169,24 @@ export function SettingsForm({
             className="resize-none h-24"
             maxLength={200}
           />
-          <p className="text-xs text-text-muted mt-1 text-right">{bio.length}/200</p>
+          <p className="text-xs text-text-muted mt-1 text-right">
+            {bio.length}/200
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="primary" onClick={handleSave} loading={loading} disabled={!canSave}>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            loading={loading}
+            disabled={!canSave}
+          >
             {t("save_btn")}
           </Button>
           {saved && <span className="text-lime text-sm">{t("saved_msg")}</span>}
-          {saveError && <span className="text-red-400 text-sm">{saveError}</span>}
+          {saveError && (
+            <span className="text-red-400 text-sm">{saveError}</span>
+          )}
         </div>
       </GlassCard>
 
@@ -185,11 +198,16 @@ export function SettingsForm({
         <div className="flex items-center gap-3">
           <TierBadge tier={tier} />
           {tier !== "premium" ? (
-            <a href={`/${locale}/premium`} className="text-sm text-lime hover:text-lime/80 transition-colors">
+            <a
+              href={`/${locale}/premium`}
+              className="text-sm text-lime hover:text-lime/80 transition-colors"
+            >
               {t("upgrade_link")}
             </a>
           ) : (
-            <span className="text-sm text-text-muted">{t("premium_permanent")}</span>
+            <span className="text-sm text-text-muted">
+              {t("premium_permanent")}
+            </span>
           )}
         </div>
       </GlassCard>
@@ -199,7 +217,11 @@ export function SettingsForm({
         <h2 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-4">
           {t("danger_zone")}
         </h2>
-        <Button variant="ghost" onClick={handleLogout} className="text-text-muted hover:text-red-400">
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className="text-text-muted hover:text-red-400"
+        >
           {t("logout_btn")}
         </Button>
       </GlassCard>

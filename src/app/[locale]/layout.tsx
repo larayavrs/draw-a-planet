@@ -8,7 +8,7 @@ import { routing } from "@/i18n/routing";
 
 import { ThemeProvider } from "@/providers/theme";
 
-import { Navbar } from "@/components/ui/Navbar";
+import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
 import { Space_Grotesk } from "next/font/google";

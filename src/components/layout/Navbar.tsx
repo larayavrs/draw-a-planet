@@ -6,14 +6,14 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
-import { Button } from "./Button";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./dropdown-menu";
+} from "../ui/dropdown-menu";
 import { getDefaultSystemSlug } from "@/lib/client-cache";
 import type { User } from "@supabase/supabase-js";
 
@@ -27,7 +27,8 @@ export function Navbar({ locale }: { locale: string }) {
   const t = useTranslations("nav");
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [defaultSystemSlug, setDefaultSystemSlug] = useState<string>("alpha-solaris");
+  const [defaultSystemSlug, setDefaultSystemSlug] =
+    useState<string>("alpha-solaris");
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -35,7 +36,10 @@ export function Navbar({ locale }: { locale: string }) {
 
     async function loadUser(u: User | null) {
       setUser(u);
-      if (!u) { setProfile(null); return; }
+      if (!u) {
+        setProfile(null);
+        return;
+      }
       const { data } = await supabase
         .from("users")
         .select("username, display_name, avatar_url")
@@ -44,11 +48,13 @@ export function Navbar({ locale }: { locale: string }) {
       setProfile(data ?? null);
     }
 
-    supabase.auth.getUser().then(({ data }) => loadUser(data.user));
+    supabase.auth.getUser().then(({ data: { user } }) => loadUser(user));
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      loadUser(session?.user ?? null);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event: string, session: any) => {
+        loadUser(session?.user ?? null);
+      },
+    );
 
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -68,30 +74,32 @@ export function Navbar({ locale }: { locale: string }) {
   const closeMenu = () => setMenuOpen(false);
   const base = `/${locale}`;
 
-  // Initials fallback when no avatar
   const initials = profile?.display_name
     ? profile.display_name.slice(0, 2).toUpperCase()
-    : profile?.username?.slice(0, 2).toUpperCase() ?? "?";
+    : (profile?.username?.slice(0, 2).toUpperCase() ?? "?");
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border-purple bg-darker-purple/80 backdrop-blur-[18px]">
+    <header className="flex-nowrap border-b border-border bg-background/60 backdrop-blur-md fixed top-0 left-0 right-0 z-50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between">
-        {/* Logo */}
         <Link
           href={base}
           className="flex items-center gap-2 font-display text-lg sm:text-xl font-bold text-foreground tracking-tight"
         >
-          <span className="text-lime">◉</span>
-          <span className="hidden sm:inline">draw-a-planet</span>
-          <span className="sm:hidden">DaP</span>
+          <p className="text-accent-foreground">draw-a-planet</p>
         </Link>
 
         {/* Desktop nav links */}
         <nav className="hidden md:flex items-center gap-6 text-xs text-muted-foreground font-semibold uppercase tracking-wide">
-          <Link href={`${base}/draw`} className="hover:text-white transition-colors">
+          <Link
+            href={`${base}/draw`}
+            className="hover:text-foreground transition-colors"
+          >
             {t("draw")}
           </Link>
-          <Link href={`${base}/system/${defaultSystemSlug}`} className="hover:text-accent-foreground transition-colors">
+          <Link
+            href={`${base}/system/${defaultSystemSlug}`}
+            className="hover:text-accent-foreground transition-colors"
+          >
             {t("explore")}
           </Link>
           <Link
@@ -108,7 +116,7 @@ export function Navbar({ locale }: { locale: string }) {
           <div className="hidden sm:flex items-center gap-2">
             {user ? (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger>
                   <button className="flex items-center gap-2 rounded-full border border-border-purple hover:border-sentry-purple/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sentry-purple/60">
                     {profile?.avatar_url ? (
                       <Image
@@ -125,19 +133,24 @@ export function Navbar({ locale }: { locale: string }) {
                     )}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-darker-purple border-border-purple">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 bg-darker-purple border-border-purple"
+                >
                   {profile && (
                     <>
                       <div className="px-3 py-2">
                         <p className="text-sm font-medium text-white truncate">
                           {profile.display_name ?? profile.username}
                         </p>
-                        <p className="text-xs text-text-muted truncate">@{profile.username}</p>
+                        <p className="text-xs text-text-muted truncate">
+                          @{profile.username}
+                        </p>
                       </div>
                       <DropdownMenuSeparator className="bg-border-purple" />
                     </>
                   )}
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem>
                     <Link
                       href={`${base}/profile/${profile?.username}`}
                       className="cursor-pointer text-text-muted hover:text-white focus:text-white"
@@ -145,7 +158,7 @@ export function Navbar({ locale }: { locale: string }) {
                       {t("profile")}
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem>
                     <Link
                       href={`${base}/settings`}
                       className="cursor-pointer text-text-muted hover:text-white focus:text-white"
@@ -182,12 +195,32 @@ export function Navbar({ locale }: { locale: string }) {
             aria-label="Toggle menu"
           >
             {menuOpen ? (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             ) : (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             )}
           </button>
@@ -241,7 +274,9 @@ export function Navbar({ locale }: { locale: string }) {
                       <p className="text-sm font-medium text-white truncate">
                         {profile.display_name ?? profile.username}
                       </p>
-                      <p className="text-xs text-text-muted truncate">@{profile.username}</p>
+                      <p className="text-xs text-text-muted truncate">
+                        @{profile.username}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -273,7 +308,11 @@ export function Navbar({ locale }: { locale: string }) {
                     {t("login")}
                   </Button>
                 </Link>
-                <Link href={`${base}/auth/register`} onClick={closeMenu} className="px-3 py-2 text-sm">
+                <Link
+                  href={`${base}/auth/register`}
+                  onClick={closeMenu}
+                  className="px-3 py-2 text-sm"
+                >
                   <Button variant="outline" size="sm" className="w-full">
                     {t("register")}
                   </Button>

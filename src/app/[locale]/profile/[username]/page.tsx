@@ -2,8 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { TierBadge } from "@/components/ui/TierBadge";
+import { GlassCard } from "@/components/layout/GlassCard";
+import { TierBadge } from "@/components/layout/TierBadge";
 import Link from "next/link";
 import Image from "next/image";
 import type { UserTier } from "@/types/tier";
@@ -31,7 +31,9 @@ async function getUserPlanets(userId: string) {
   const supabase = getSupabaseServiceClient();
   const { data: planets } = await supabase
     .from("planets")
-    .select("id, name, planet_type, texture_url, created_at, view_count, is_active")
+    .select(
+      "id, name, planet_type, texture_url, created_at, view_count, is_active",
+    )
     .eq("user_id", userId)
     .eq("is_active", true)
     .order("created_at", { ascending: false })
@@ -39,7 +41,11 @@ async function getUserPlanets(userId: string) {
   return planets;
 }
 
-export default async function ProfilePage({ params }: { params: Promise<Params> }) {
+export default async function ProfilePage({
+  params,
+}: {
+  params: Promise<Params>;
+}) {
   const { locale, username } = await params;
   const t = await getTranslations("profile");
 
@@ -73,22 +79,39 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
             <TierBadge tier={user.tier as UserTier} />
           </div>
           <p className="text-text-muted text-sm mt-0.5">@{user.username}</p>
-          {user.bio && <p className="text-text-gray text-sm mt-2 max-w-lg line-clamp-3">{user.bio}</p>}
+          {user.bio && (
+            <p className="text-text-gray text-sm mt-2 max-w-lg line-clamp-3">
+              {user.bio}
+            </p>
+          )}
           <p className="text-text-muted text-xs mt-2">
-            {t("joined", { date: new Date(user.created_at).toLocaleDateString() })}
+            {t("joined", {
+              date: new Date(user.created_at).toLocaleDateString(),
+            })}
           </p>
         </div>
       </GlassCard>
 
       {/* Planets grid */}
-      <h2 className="text-base sm:text-lg font-semibold text-white mb-4">{t("planets_tab")}</h2>
-      {(!planets || planets.length === 0) ? (
+      <h2 className="text-base sm:text-lg font-semibold text-white mb-4">
+        {t("planets_tab")}
+      </h2>
+      {!planets || planets.length === 0 ? (
         <p className="text-text-muted">{t("no_planets")}</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-          {(planets as Array<{ id: string; name: string; texture_url: string | null }>).map((planet, index) => (
+          {(
+            planets as Array<{
+              id: string;
+              name: string;
+              texture_url: string | null;
+            }>
+          ).map((planet, index) => (
             <Link key={planet.id} href={`/${locale}/planet/${planet.id}`}>
-              <GlassCard hover className="overflow-hidden aspect-square group cursor-pointer">
+              <GlassCard
+                hover
+                className="overflow-hidden aspect-square group cursor-pointer"
+              >
                 {planet.texture_url ? (
                   <Image
                     src={`${planet.texture_url}?width=128&height=128&resize=cover`}
@@ -104,7 +127,9 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
                   </div>
                 )}
               </GlassCard>
-              <p className="text-xs text-text-muted mt-1 truncate">{planet.name}</p>
+              <p className="text-xs text-text-muted mt-1 truncate">
+                {planet.name}
+              </p>
             </Link>
           ))}
         </div>

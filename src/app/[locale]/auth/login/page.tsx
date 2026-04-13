@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/Button";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/layout/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -30,9 +30,15 @@ export default function LoginPage({
     setError("");
     setLoading(true);
     const supabase = getSupabaseBrowserClient();
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: err } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     setLoading(false);
-    if (err) { setError(t("error_invalid_credentials")); return; }
+    if (err) {
+      setError(t("error_invalid_credentials"));
+      return;
+    }
     router.push(`/${locale}`);
   }
 
@@ -49,7 +55,9 @@ export default function LoginPage({
       <GlassCard className="w-full max-w-md p-6 sm:p-8">
         <div className="text-center mb-6 sm:mb-8">
           <span className="text-4xl sm:text-5xl">◉</span>
-          <h1 className="text-xl sm:text-2xl font-bold text-white mt-3">{t("login_title")}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-white mt-3">
+            {t("login_title")}
+          </h1>
           <p className="text-text-muted text-sm mt-1">{t("login_subtitle")}</p>
         </div>
 
@@ -92,7 +100,13 @@ export default function LoginPage({
               autoComplete="current-password"
             />
           </div>
-          <Button type="submit" variant="cta" size="lg" className="w-full mt-2" loading={loading}>
+          <Button
+            type="submit"
+            variant="cta"
+            size="lg"
+            className="w-full mt-2"
+            loading={loading}
+          >
             {t("login_btn")}
           </Button>
         </form>
@@ -104,17 +118,30 @@ export default function LoginPage({
         </div>
 
         <div className="flex flex-col gap-3">
-          <Button variant="glass" size="md" className="w-full" onClick={() => handleOAuth("google")}>
+          <Button
+            variant="glass"
+            size="md"
+            className="w-full"
+            onClick={() => handleOAuth("google")}
+          >
             {t("google")}
           </Button>
-          <Button variant="glass" size="md" className="w-full" onClick={() => handleOAuth("github")}>
+          <Button
+            variant="glass"
+            size="md"
+            className="w-full"
+            onClick={() => handleOAuth("github")}
+          >
             {t("github")}
           </Button>
         </div>
 
         <p className="mt-5 sm:mt-6 text-center text-sm text-text-muted">
           {t("no_account")}{" "}
-          <Link href={`/${locale}/auth/register`} className="text-sentry-purple hover:text-white transition-colors">
+          <Link
+            href={`/${locale}/auth/register`}
+            className="text-sentry-purple hover:text-white transition-colors"
+          >
             {t("sign_up_link")}
           </Link>
         </p>

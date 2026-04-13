@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/Button";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/layout/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -30,11 +30,11 @@ export default function ResetPasswordPage({
   // onAuthStateChange fires with type PASSWORD_RECOVERY once it's parsed.
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event) => {
-        if (event === "PASSWORD_RECOVERY") setReady(true);
-      },
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setReady(true);
+    });
     // Also check if a session already exists (e.g. page refresh)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setReady(true);

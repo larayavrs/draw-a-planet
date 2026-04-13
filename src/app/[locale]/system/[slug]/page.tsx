@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { SystemBoard } from "@/components/three/SystemBoard";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { Button } from "@/components/ui/Button";
+import { GlassCard } from "@/components/layout/GlassCard";
+import { Button } from "@/components/ui/button";
 import { SystemHeader } from "./SystemHeader";
 import Link from "next/link";
 import type { Planet, System } from "@/types/planet";
@@ -49,9 +49,11 @@ async function getSystemPlanets(systemId: string): Promise<Planet[]> {
   return (planetsRaw ?? []).map((p: any) => ({
     ...p,
     creator_username:
-      (p.users as { username: string; display_name: string | null } | null)?.username ?? null,
+      (p.users as { username: string; display_name: string | null } | null)
+        ?.username ?? null,
     creator_display_name:
-      (p.users as { username: string; display_name: string | null } | null)?.display_name ?? null,
+      (p.users as { username: string; display_name: string | null } | null)
+        ?.display_name ?? null,
     creator_avatar:
       (p.users as { avatar_url: string } | null)?.avatar_url ?? null,
   })) as Planet[];
@@ -114,7 +116,9 @@ async function SystemContent({
   const t = await getTranslations("system_board");
   const { getSupabaseServerClient } = await import("@/lib/supabase/server");
   const supabase = await getSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const planets = await getSystemPlanets(system.id);
 
@@ -135,7 +139,12 @@ async function SystemContent({
             </GlassCard>
           </div>
         ) : (
-          <SystemBoard system={system} initialPlanets={planets} locale={locale} currentUserId={user?.id ?? null} />
+          <SystemBoard
+            system={system}
+            initialPlanets={planets}
+            locale={locale}
+            currentUserId={user?.id ?? null}
+          />
         )}
       </div>
 

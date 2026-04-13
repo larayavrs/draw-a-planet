@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useCanvasStore } from "@/stores/canvasStore";
 import { ALLOWED_PLANET_TYPES } from "@/lib/planet/limits";
-import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/layout/Modal";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PlanetType, UserTier } from "@/types/tier";
 import Link from "next/link";
@@ -20,9 +20,23 @@ const PLANET_TYPE_ICONS: Record<PlanetType, string> = {
   ringed: "💫",
 };
 
-const ALL_TYPES: PlanetType[] = ["rocky", "gaseous", "icy", "lava", "ocean", "desert", "ringed"];
+const ALL_TYPES: PlanetType[] = [
+  "rocky",
+  "gaseous",
+  "icy",
+  "lava",
+  "ocean",
+  "desert",
+  "ringed",
+];
 
-export function PlanetTypeSelector({ tier, locale }: { tier: UserTier; locale: string }) {
+export function PlanetTypeSelector({
+  tier,
+  locale,
+}: {
+  tier: UserTier;
+  locale: string;
+}) {
   const t = useTranslations("draw");
   const tTypes = useTranslations("planet_types");
   const tGate = useTranslations("tier_gate");
@@ -45,7 +59,10 @@ export function PlanetTypeSelector({ tier, locale }: { tier: UserTier; locale: s
               <button
                 key={type}
                 onClick={() => {
-                  if (!isAllowed) { setUpsellOpen(true); return; }
+                  if (!isAllowed) {
+                    setUpsellOpen(true);
+                    return;
+                  }
                   setPlanetType(type);
                 }}
                 title={tTypes(type)}
@@ -55,13 +72,19 @@ export function PlanetTypeSelector({ tier, locale }: { tier: UserTier; locale: s
                     ? planetType === type
                       ? "bg-sentry-purple/40 text-white ring-1 ring-sentry-purple"
                       : "bg-border-purple/30 text-text-muted hover:bg-border-purple/60 hover:text-white"
-                    : "bg-border-purple/20 text-text-muted/40 cursor-pointer"
+                    : "bg-border-purple/20 text-text-muted/40 cursor-pointer",
                 )}
               >
-                <span className="text-lg leading-none">{PLANET_TYPE_ICONS[type]}</span>
-                <span className="leading-tight text-center hidden sm:block lg:block">{tTypes(type)}</span>
+                <span className="text-lg leading-none">
+                  {PLANET_TYPE_ICONS[type]}
+                </span>
+                <span className="leading-tight text-center hidden sm:block lg:block">
+                  {tTypes(type)}
+                </span>
                 {!isAllowed && (
-                  <span className="absolute top-1 right-1 text-[9px] text-text-muted/50">🔒</span>
+                  <span className="absolute top-1 right-1 text-[9px] text-text-muted/50">
+                    🔒
+                  </span>
                 )}
               </button>
             );
@@ -69,9 +92,15 @@ export function PlanetTypeSelector({ tier, locale }: { tier: UserTier; locale: s
         </div>
       </div>
 
-      <Modal open={upsellOpen} onClose={() => setUpsellOpen(false)} title={tGate("title")}>
+      <Modal
+        open={upsellOpen}
+        onClose={() => setUpsellOpen(false)}
+        title={tGate("title")}
+      >
         <p className="text-text-muted text-sm mb-4">
-          {tier === "guest" ? tGate("guest_to_registered") : tGate("registered_to_premium")}
+          {tier === "guest"
+            ? tGate("guest_to_registered")
+            : tGate("registered_to_premium")}
         </p>
         <div className="flex gap-3 flex-wrap">
           {tier === "guest" && (

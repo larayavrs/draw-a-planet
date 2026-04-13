@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 export function PurchaseButton() {
   const t = useTranslations("premium");
@@ -18,7 +18,10 @@ export function PurchaseButton() {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-      if (!res.ok) { setError(t("checkout_error")); return; }
+      if (!res.ok) {
+        setError(t("checkout_error"));
+        return;
+      }
       window.location.href = data.init_point;
     } catch {
       setError(t("checkout_error"));

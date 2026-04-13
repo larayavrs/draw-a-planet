@@ -3,8 +3,8 @@
 import { use, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/layout/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
