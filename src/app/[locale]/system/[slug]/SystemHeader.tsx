@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { SystemSwitcher } from "@/components/ui/SystemSwitcher";
 import type { System } from "@/types/planet";
@@ -20,6 +21,7 @@ export function SystemHeader({
   planetsCountLabel,
   realtimeBadgeLabel,
 }: SystemHeaderProps) {
+  const t = useTranslations("nav");
   return (
     <div className="border-b border-border-purple bg-darker-purple/60 backdrop-blur-sm px-3 py-2 md:px-6 md:py-3 flex items-center justify-between gap-2">
       <div className="flex items-center gap-2 md:gap-4 min-w-0">
@@ -39,7 +41,7 @@ export function SystemHeader({
       </div>
       <Link href={`/${locale}/draw`}>
         <Button variant="cta" size="sm">
-          ✏ Draw
+          ✏ {t("draw")}
         </Button>
       </Link>
     </div>

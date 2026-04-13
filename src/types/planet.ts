@@ -29,6 +29,7 @@ export interface Planet {
   created_at: string;
   // joined
   creator_username?: string | null;
+  creator_display_name?: string | null;
   creator_avatar?: string | null;
 }
 

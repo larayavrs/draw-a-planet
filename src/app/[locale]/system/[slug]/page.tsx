@@ -37,7 +37,7 @@ async function getSystemPlanets(systemId: string): Promise<Planet[]> {
       orbit_radius, orbit_speed, orbit_offset, orbit_inclination,
       tier_at_creation, lifespan_expires_at, is_active, view_count, created_at,
       user_id,
-      users ( username, avatar_url )
+      users ( username, display_name, avatar_url )
     `,
     )
     .eq("system_id", systemId)
@@ -49,7 +49,9 @@ async function getSystemPlanets(systemId: string): Promise<Planet[]> {
   return (planetsRaw ?? []).map((p: any) => ({
     ...p,
     creator_username:
-      (p.users as { username: string } | null)?.username ?? null,
+      (p.users as { username: string; display_name: string | null } | null)?.username ?? null,
+    creator_display_name:
+      (p.users as { username: string; display_name: string | null } | null)?.display_name ?? null,
     creator_avatar:
       (p.users as { avatar_url: string } | null)?.avatar_url ?? null,
   })) as Planet[];
@@ -123,13 +125,13 @@ async function SystemContent({
               <p className="text-text-muted">{t("empty_state")}</p>
               <Link href={`/${locale}/draw`} className="mt-4 inline-block">
                 <Button variant="cta" size="md">
-                  Start drawing
+                  {t("draw_cta")}
                 </Button>
               </Link>
             </GlassCard>
           </div>
         ) : (
-          <SystemBoard system={system} initialPlanets={planets} />
+          <SystemBoard system={system} initialPlanets={planets} locale={locale} />
         )}
       </div>
 

@@ -1,7 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
+import { headers } from "next/headers";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
+import { hashIp } from "@/lib/views";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { TierBadge } from "@/components/ui/TierBadge";
 import Link from "next/link";
@@ -33,10 +35,25 @@ export default async function PlanetDetailPage({ params }: { params: Promise<Par
 
   if (!planet) notFound();
 
-  // Increment view count after the response is sent — after() is the Next.js 15+
-  // safe pattern for post-response work (replaces fire-and-forget .then(() => {}))
+  // Capture IP before after() — dynamic APIs (headers) are not available inside it.
+  const headersList = await headers();
+  const rawIp =
+    headersList.get("x-forwarded-for")?.split(",")[0].trim() ??
+    headersList.get("x-real-ip") ??
+    "unknown";
+
+  // Record view after the response is sent (Next.js 15+ safe pattern).
+  // Deduplication is handled inside record_planet_view: 1 view per user/IP per day.
   after(async () => {
-    await supabase.rpc("increment_planet_views", { planet_id: id });
+    const [{ data: { user } }, ipHash] = await Promise.all([
+      supabase.auth.getUser(),
+      hashIp(rawIp),
+    ]);
+    await supabase.rpc("record_planet_view", {
+      p_planet_id: id,
+      p_viewer_id: user?.id ?? null,
+      p_ip_hash: ipHash,
+    });
   });
 
   const creator = planet.users as { username: string; display_name: string | null; avatar_url: string | null; tier: string } | null;
@@ -54,6 +71,8 @@ export default async function PlanetDetailPage({ params }: { params: Promise<Par
                 alt={planet.name}
                 width={400}
                 height={400}
+                priority
+                loading="eager"
                 className="w-full h-auto rounded-full border-4 border-border-purple shadow-[0_0_80px_rgba(106,95,193,0.4)]"
               />
             ) : (

@@ -86,7 +86,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
         <p className="text-text-muted">{t("no_planets")}</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-          {(planets as Array<{ id: string; name: string; texture_url: string | null }>).map((planet) => (
+          {(planets as Array<{ id: string; name: string; texture_url: string | null }>).map((planet, index) => (
             <Link key={planet.id} href={`/${locale}/planet/${planet.id}`}>
               <GlassCard hover className="overflow-hidden aspect-square group cursor-pointer">
                 {planet.texture_url ? (
@@ -95,8 +95,8 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
                     alt={planet.name}
                     width={128}
                     height={128}
+                    priority={index === 0}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl bg-border-purple/30">

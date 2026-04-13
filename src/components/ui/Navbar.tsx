@@ -1,31 +1,55 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { Button } from "./Button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./dropdown-menu";
 import { getDefaultSystemSlug } from "@/lib/client-cache";
 import type { User } from "@supabase/supabase-js";
+
+interface UserProfile {
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+}
 
 export function Navbar({ locale }: { locale: string }) {
   const t = useTranslations("nav");
   const [user, setUser] = useState<User | null>(null);
-  const [defaultSystemSlug, setDefaultSystemSlug] =
-    useState<string>("alpha-solaris");
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [defaultSystemSlug, setDefaultSystemSlug] = useState<string>("alpha-solaris");
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
-    supabase.auth
-      .getUser()
-      .then(({ data }: { data: { user: User | null } }) => setUser(data.user));
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event: string, session: { user: User } | null) => {
-        setUser(session?.user ?? null);
-      },
-    );
+
+    async function loadUser(u: User | null) {
+      setUser(u);
+      if (!u) { setProfile(null); return; }
+      const { data } = await supabase
+        .from("users")
+        .select("username, display_name, avatar_url")
+        .eq("id", u.id)
+        .single();
+      setProfile(data ?? null);
+    }
+
+    supabase.auth.getUser().then(({ data }) => loadUser(data.user));
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadUser(session?.user ?? null);
+    });
+
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -35,8 +59,19 @@ export function Navbar({ locale }: { locale: string }) {
     });
   }, []);
 
+  async function handleLogout() {
+    const supabase = getSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  }
+
   const closeMenu = () => setMenuOpen(false);
   const base = `/${locale}`;
+
+  // Initials fallback when no avatar
+  const initials = profile?.display_name
+    ? profile.display_name.slice(0, 2).toUpperCase()
+    : profile?.username?.slice(0, 2).toUpperCase() ?? "?";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border-purple bg-darker-purple/80 backdrop-blur-[18px]">
@@ -53,16 +88,10 @@ export function Navbar({ locale }: { locale: string }) {
 
         {/* Desktop nav links */}
         <nav className="hidden md:flex items-center gap-6 text-xs text-muted-foreground font-semibold uppercase tracking-wide">
-          <Link
-            href={`${base}/draw`}
-            className="hover:text-white transition-colors"
-          >
+          <Link href={`${base}/draw`} className="hover:text-white transition-colors">
             {t("draw")}
           </Link>
-          <Link
-            href={`${base}/system/${defaultSystemSlug}`}
-            className="hover:text-accent-foreground transition-colors"
-          >
+          <Link href={`${base}/system/${defaultSystemSlug}`} className="hover:text-accent-foreground transition-colors">
             {t("explore")}
           </Link>
           <Link
@@ -78,11 +107,61 @@ export function Navbar({ locale }: { locale: string }) {
           <LocaleSwitcher />
           <div className="hidden sm:flex items-center gap-2">
             {user ? (
-              <Link href={`${base}/settings`}>
-                <Button variant="outline" size="sm">
-                  {t("settings")}
-                </Button>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-full border border-border-purple hover:border-sentry-purple/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sentry-purple/60">
+                    {profile?.avatar_url ? (
+                      <Image
+                        src={profile.avatar_url}
+                        alt={profile.username}
+                        width={32}
+                        height={32}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="w-8 h-8 rounded-full bg-sentry-purple/40 flex items-center justify-center text-xs font-bold text-white">
+                        {initials}
+                      </span>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-darker-purple border-border-purple">
+                  {profile && (
+                    <>
+                      <div className="px-3 py-2">
+                        <p className="text-sm font-medium text-white truncate">
+                          {profile.display_name ?? profile.username}
+                        </p>
+                        <p className="text-xs text-text-muted truncate">@{profile.username}</p>
+                      </div>
+                      <DropdownMenuSeparator className="bg-border-purple" />
+                    </>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={`${base}/profile/${profile?.username}`}
+                      className="cursor-pointer text-text-muted hover:text-white focus:text-white"
+                    >
+                      {t("profile")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={`${base}/settings`}
+                      className="cursor-pointer text-text-muted hover:text-white focus:text-white"
+                    >
+                      {t("settings")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-border-purple" />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer text-text-muted hover:text-red-400 focus:text-red-400"
+                  >
+                    {t("logout")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <>
                 <Link href={`${base}/auth/login`}>
@@ -103,39 +182,19 @@ export function Navbar({ locale }: { locale: string }) {
             aria-label="Toggle menu"
           >
             {menuOpen ? (
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             ) : (
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             )}
           </button>
         </div>
       </div>
 
-      {/* Mobile menu goes here */}
+      {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden border-t border-border-purple bg-darker-purple/95 backdrop-blur-[18px]">
           <nav className="flex flex-col px-4 py-3 gap-1">
@@ -162,13 +221,51 @@ export function Navbar({ locale }: { locale: string }) {
             </Link>
             <div className="border-t border-border-purple my-2" />
             {user ? (
-              <Link
-                href={`${base}/settings`}
-                onClick={closeMenu}
-                className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors"
-              >
-                {t("settings")}
-              </Link>
+              <>
+                {profile && (
+                  <div className="flex items-center gap-2.5 px-3 py-2 mb-1">
+                    {profile.avatar_url ? (
+                      <Image
+                        src={profile.avatar_url}
+                        alt={profile.username}
+                        width={28}
+                        height={28}
+                        className="w-7 h-7 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="w-7 h-7 rounded-full bg-sentry-purple/40 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        {initials}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {profile.display_name ?? profile.username}
+                      </p>
+                      <p className="text-xs text-text-muted truncate">@{profile.username}</p>
+                    </div>
+                  </div>
+                )}
+                <Link
+                  href={`${base}/profile/${profile?.username}`}
+                  onClick={closeMenu}
+                  className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors"
+                >
+                  {t("profile")}
+                </Link>
+                <Link
+                  href={`${base}/settings`}
+                  onClick={closeMenu}
+                  className="px-3 py-2.5 text-sm text-text-muted hover:text-white hover:bg-deep-purple/50 rounded-lg transition-colors"
+                >
+                  {t("settings")}
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2.5 text-sm text-text-muted hover:text-red-400 hover:bg-deep-purple/50 rounded-lg transition-colors text-left"
+                >
+                  {t("logout")}
+                </button>
+              </>
             ) : (
               <>
                 <Link href={`${base}/auth/login`} onClick={closeMenu}>
@@ -176,11 +273,7 @@ export function Navbar({ locale }: { locale: string }) {
                     {t("login")}
                   </Button>
                 </Link>
-                <Link
-                  href={`${base}/auth/register`}
-                  onClick={closeMenu}
-                  className="px-3 py-2 text-sm"
-                >
+                <Link href={`${base}/auth/register`} onClick={closeMenu} className="px-3 py-2 text-sm">
                   <Button variant="outline" size="sm" className="w-full">
                     {t("register")}
                   </Button>

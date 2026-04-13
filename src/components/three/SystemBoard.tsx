@@ -1,12 +1,14 @@
 "use client";
 
 import { Suspense, useState, useCallback, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { Stars, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
 // Shared with OrbitingPlanet — same cache instance
 const preloadLoader = new THREE.TextureLoader();
+import Link from "next/link";
 import { CentralStar } from "./CentralStar";
 import { OrbitingPlanet } from "./OrbitingPlanet";
 import { useSystemRealtime } from "@/hooks/useSystemRealtime";
@@ -16,6 +18,41 @@ interface SystemBoardProps {
   system: System;
   initialPlanets: Planet[];
   mini?: boolean;
+  locale?: string;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+ *  Duration helper
+ * ────────────────────────────────────────────────────────────────── */
+
+/**
+ * Returns a human-readable duration string from a future date.
+ * Shows days and hours (e.g., "24d 6h", "6h 30m", or "Permanente")
+ */
+function formatTimeRemaining(
+  expiresAt: string | null,
+  t: ReturnType<typeof useTranslations<"system_board">>,
+): string {
+  if (!expiresAt) return t("permanent_label");
+
+  const now = new Date();
+  const expires = new Date(expiresAt);
+  const diffMs = expires.getTime() - now.getTime();
+
+  if (diffMs <= 0) return "0h";
+
+  const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
 }
 
 /* ──────────────────────────────────────────────────────────────────
@@ -149,7 +186,9 @@ export function SystemBoard({
   system,
   initialPlanets,
   mini = false,
+  locale = "en",
 }: SystemBoardProps) {
+  const t = useTranslations("system_board");
   const [planets, setPlanets] = useState<Planet[]>(initialPlanets);
 
   // Kick off parallel texture preloads before any OrbitingPlanet mounts.
@@ -291,7 +330,7 @@ export function SystemBoard({
           <button
             onClick={() => setPaused((p) => !p)}
             className="rounded-full border border-border-purple bg-darker-purple/80 backdrop-blur-sm p-2 text-white hover:bg-sentry-purple/60 transition-colors"
-            title={paused ? "Reanudar" : "Pausar"}
+            title={paused ? t("resume") : t("pause")}
           >
             {paused ? (
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -310,7 +349,7 @@ export function SystemBoard({
               onClick={() => setFocusedPlanet(null)}
               className="rounded-full border border-border-purple bg-darker-purple/80 backdrop-blur-sm px-4 py-2 text-sm text-white hover:bg-sentry-purple/60 transition-colors"
             >
-              ← Back to system
+              {t("back_to_system")}
             </button>
           )}
         </div>
@@ -345,44 +384,43 @@ export function SystemBoard({
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-text-muted">Tipo</span>
+                <span className="text-text-muted">{t("type_label")}</span>
                 <span className="text-white capitalize">
                   {focusedPlanet.planet_type}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Creado por</span>
+                <span className="text-text-muted">{t("creator_label")}</span>
                 <span className="text-white">
-                  {focusedPlanet.creator_username || "Anónimo"}
+                  {focusedPlanet.creator_display_name || focusedPlanet.creator_username || t("anonymous_label")}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Vistas</span>
+                <span className="text-text-muted">{t("views_label")}</span>
                 <span className="text-white">{focusedPlanet.view_count}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Creado</span>
+                <span className="text-text-muted">{t("created_label")}</span>
                 <span className="text-white">
                   {new Date(focusedPlanet.created_at).toLocaleDateString()}
                 </span>
               </div>
-              {focusedPlanet.lifespan_expires_at && (
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Expira</span>
-                  <span className="text-white">
-                    {new Date(
-                      focusedPlanet.lifespan_expires_at,
-                    ).toLocaleDateString()}
-                  </span>
-                </div>
-              )}
-              {!focusedPlanet.lifespan_expires_at && (
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Duración</span>
-                  <span className="text-lime font-medium">Permanente</span>
-                </div>
-              )}
+              <div className="flex justify-between">
+                <span className="text-text-muted">{t("duration_label")}</span>
+                <span className="text-white">
+                  {formatTimeRemaining(focusedPlanet.lifespan_expires_at, t)}
+                </span>
+              </div>
             </div>
+            <Link
+              href={`/${locale}/planet/${focusedPlanet.id}`}
+              className="mt-4 flex items-center justify-center gap-1.5 w-full rounded-lg border border-border-purple bg-sentry-purple/20 hover:bg-sentry-purple/40 transition-colors py-2 text-sm text-white"
+            >
+              {t("view_planet")}
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
         </div>
       )}

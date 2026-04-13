@@ -19,7 +19,7 @@ export default async function SettingsPage({ params }: { params: Promise<Params>
 
   const { data: profile } = await supabase
     .from("users")
-    .select("display_name, bio, tier")
+    .select("username, display_name, bio, tier")
     .eq("id", user.id)
     .single();
 
@@ -28,6 +28,7 @@ export default async function SettingsPage({ params }: { params: Promise<Params>
       <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8">{t("page_title")}</h1>
       <SettingsForm
         userId={user.id}
+        initialUsername={profile?.username ?? ""}
         initialDisplayName={profile?.display_name ?? ""}
         initialBio={profile?.bio ?? ""}
         tier={(profile?.tier ?? "registered") as UserTier}
