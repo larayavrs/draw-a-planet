@@ -1,10 +1,11 @@
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { UserTier } from "@/types/tier";
 
 const tierStyles: Record<UserTier, string> = {
-  guest: "bg-border-purple/60 text-text-muted",
-  registered: "bg-sentry-purple/20 text-sentry-purple border border-sentry-purple/40",
-  premium: "bg-lime/20 text-lime border border-lime/40",
+  guest: "bg-border-purple/60 text-text-muted border-transparent rounded-full",
+  registered: "bg-sentry-purple/20 text-sentry-purple border border-sentry-purple/40 rounded-full",
+  premium: "bg-lime/20 text-lime border border-lime/40 rounded-full",
 };
 
 const tierLabels: Record<UserTier, string> = {
@@ -15,15 +16,16 @@ const tierLabels: Record<UserTier, string> = {
 
 export function TierBadge({ tier, className }: { tier: UserTier; className?: string }) {
   return (
-    <span
+    <Badge
+      variant="outline"
       className={cn(
-        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider",
+        "px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider",
         tierStyles[tier],
         className
       )}
     >
       {tier === "premium" && <span className="mr-1">✦</span>}
       {tierLabels[tier]}
-    </span>
+    </Badge>
   );
 }

@@ -11,6 +11,9 @@ import { PlanetTypeSelector } from "@/components/canvas/PlanetTypeSelector";
 import { PlanetTemplates } from "@/components/canvas/PlanetTemplates";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCanvasStore } from "@/stores/canvasStore";
 import { useUserTier } from "@/hooks/useUserTier";
 import { useGuestSession } from "@/hooks/useGuestSession";
@@ -45,23 +48,22 @@ export default function DrawPage({
       store.setPublishError(t("name_required"));
       return;
     }
-    if (!store.fabricRef?.current) return;
+    if (!store.actions?.exportCanvas) {
+      store.setPublishError(t("publish_error"));
+      return;
+    }
 
     store.setPublishError(null);
     store.setIsPublishing(true);
 
     try {
-      const fc = store.fabricRef.current as {
-        toJSON: () => unknown;
-        toDataURL: (opts: { format: string; quality: number; multiplier: number }) => string;
-      };
-      const fabricJson = fc.toJSON() as Record<string, unknown>;
-      const canvas_data = { version: 1, width: 512, height: 512, ...fabricJson };
-
-      let texture_data_url = fc.toDataURL({ format: "webp", quality: 0.82, multiplier: 0.25 });
-      if (!texture_data_url.startsWith("data:image/webp")) {
-        texture_data_url = fc.toDataURL({ format: "jpeg", quality: 0.82, multiplier: 0.25 });
+      const exported = store.actions.exportCanvas();
+      if (!exported) {
+        store.setPublishError(t("publish_error"));
+        return;
       }
+
+      const { canvas_data, texture_data_url } = exported;
 
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (tier === "guest" && guestToken) {
@@ -83,11 +85,9 @@ export default function DrawPage({
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.error === "guest_limit_reached") {
-          store.setPublishError(t("guest_limit_reached"));
-        } else {
-          store.setPublishError(t("publish_error"));
-        }
+        store.setPublishError(
+          data.error === "guest_limit_reached" ? t("guest_limit_reached") : t("publish_error")
+        );
         return;
       }
 
@@ -232,16 +232,14 @@ function PublishPanel({
     <>
       {/* Planet name */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-          {t("planet_name_label")}
-        </label>
-        <input
+        <Label htmlFor="planet-name">{t("planet_name_label")}</Label>
+        <Input
+          id="planet-name"
           type="text"
           value={store.planetName}
           onChange={(e) => store.setPlanetName(e.target.value)}
           placeholder={t("planet_name_placeholder")}
           maxLength={40}
-          className="input-base w-full"
         />
       </div>
 
@@ -253,16 +251,15 @@ function PublishPanel({
       {/* System selector (registered+) */}
       {tier !== "guest" && (
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-            {t("system_label")}
-          </label>
+          <Label htmlFor="system-select">{t("system_label")}</Label>
           <select
+            id="system-select"
             value={store.selectedSystemId}
             onChange={(e) => store.setSelectedSystemId(e.target.value)}
-            className="input-base w-full"
+            className="h-9 w-full rounded-lg px-3 py-1.5 text-sm border border-border-purple/60 bg-deeper-purple/50 text-white outline-none focus-visible:border-sentry-purple/70 focus-visible:ring-1 focus-visible:ring-sentry-purple/30 transition-colors"
           >
             {systems.map((s) => (
-              <option key={s.id} value={s.id}>
+              <option key={s.id} value={s.id} className="bg-deeper-purple">
                 {s.name}
               </option>
             ))}
@@ -275,7 +272,9 @@ function PublishPanel({
 
       {/* Error */}
       {store.publishError && (
-        <p className="text-red-400 text-sm">{store.publishError}</p>
+        <Alert variant="destructive">
+          <AlertDescription>{store.publishError}</AlertDescription>
+        </Alert>
       )}
 
       {/* Publish button */}

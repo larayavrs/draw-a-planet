@@ -3,16 +3,16 @@ import type { PlanetType } from "@/types/tier";
 
 export type DrawTool = "brush" | "fill" | "eraser";
 
+// Actions registered by PlanetCanvas once Fabric is ready
+interface CanvasActions {
+  undo: () => void;
+  clear: () => void;
+  applyTemplate: (id: string) => Promise<void>;
+  exportCanvas: () => { canvas_data: object; texture_data_url: string } | null;
+}
+
 interface CanvasState {
-  // Fabric instance ref (set by PlanetCanvas component)
-  fabricRef: React.RefObject<unknown> | null;
-  setFabricRef: (ref: React.RefObject<unknown>) => void;
-
-  // Direct DOM ref to the actual <canvas> element Fabric renders on
-  canvasEl: React.RefObject<HTMLCanvasElement | null> | null;
-  setCanvasEl: (ref: React.RefObject<HTMLCanvasElement | null>) => void;
-
-  // Drawing
+  // Drawing tool state
   tool: DrawTool;
   setTool: (tool: DrawTool) => void;
   currentColor: string;
@@ -36,16 +36,15 @@ interface CanvasState {
   publishedPlanetId: string | null;
   setPublishedPlanetId: (id: string | null) => void;
 
+  // Canvas actions — registered by PlanetCanvas after Fabric is ready
+  actions: CanvasActions | null;
+  registerActions: (actions: CanvasActions) => void;
+  clearActions: () => void;
+
   reset: () => void;
 }
 
 export const useCanvasStore = create<CanvasState>((set) => ({
-  fabricRef: null,
-  setFabricRef: (ref) => set({ fabricRef: ref }),
-
-  canvasEl: null,
-  setCanvasEl: (ref) => set({ canvasEl: ref }),
-
   tool: "brush",
   setTool: (tool) => set({ tool }),
   currentColor: "#c2543a",
@@ -66,6 +65,10 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   setPublishError: (publishError) => set({ publishError }),
   publishedPlanetId: null,
   setPublishedPlanetId: (publishedPlanetId) => set({ publishedPlanetId }),
+
+  actions: null,
+  registerActions: (actions) => set({ actions }),
+  clearActions: () => set({ actions: null }),
 
   reset: () =>
     set({

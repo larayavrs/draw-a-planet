@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { TierBadge } from "@/components/ui/TierBadge";
@@ -32,8 +33,11 @@ export default async function PlanetDetailPage({ params }: { params: Promise<Par
 
   if (!planet) notFound();
 
-  // Increment view count (fire and forget)
-  supabase.rpc("increment_planet_views", { planet_id: id }).then(() => {});
+  // Increment view count after the response is sent — after() is the Next.js 15+
+  // safe pattern for post-response work (replaces fire-and-forget .then(() => {}))
+  after(async () => {
+    await supabase.rpc("increment_planet_views", { planet_id: id });
+  });
 
   const creator = planet.users as { username: string; display_name: string | null; avatar_url: string | null; tier: string } | null;
   const system = planet.systems as { name: string; slug: string } | null;

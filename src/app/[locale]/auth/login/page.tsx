@@ -7,6 +7,10 @@ import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
 export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = use(params);
@@ -46,38 +50,34 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
         </div>
 
         {error && (
-          <div className="mb-4 px-3 py-2 rounded-[8px] bg-red-900/40 border border-red-700/50 text-red-300 text-sm">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">
-              {t("email_label")}
-            </label>
-            <input
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="email">{t("email_label")}</Label>
+            <Input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t("email_placeholder")}
               required
               autoComplete="email"
-              className="input-base w-full"
             />
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">
-              {t("password_label")}
-            </label>
-            <input
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="password">{t("password_label")}</Label>
+            <Input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("password_placeholder")}
               required
               autoComplete="current-password"
-              className="input-base w-full"
             />
           </div>
           <Button type="submit" variant="cta" size="lg" className="w-full mt-2" loading={loading}>
@@ -86,9 +86,9 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
         </form>
 
         <div className="my-5 sm:my-6 flex items-center gap-3 text-text-muted text-xs">
-          <div className="flex-1 h-px bg-border-purple" />
+          <Separator className="flex-1 bg-border-purple" />
           {t("or_continue")}
-          <div className="flex-1 h-px bg-border-purple" />
+          <Separator className="flex-1 bg-border-purple" />
         </div>
 
         <div className="flex flex-col gap-3">

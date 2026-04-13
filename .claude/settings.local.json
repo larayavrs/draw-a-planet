@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const p = require\\('./node_modules/next/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(node -e \"const m = require\\('next/dist/server/use-cache/cache-life'\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node -e \"const p = require\\('./node_modules/next/package.json'\\); const exports = p.exports; const keys = Object.keys\\(exports\\).filter\\(k => k.includes\\('cache'\\)\\); console.log\\(JSON.stringify\\(keys\\)\\)\")",
+      "Bash(ls node_modules/next/*.d.ts)",
+      "Bash(npx tsc:*)",
+      "Bash(xargs grep:*)",
+      "Bash(cat tailwind.config.*)",
+      "Bash(ls *.config.*)",
+      "Bash(pnpm build:*)",
+      "Bash(node -e ':*)",
+      "Bash(node --input-type=module)",
+      "Bash(npx shadcn@latest add input --yes)",
+      "Bash(npx shadcn@latest add label --yes)",
+      "Bash(npx shadcn@latest add textarea --yes)",
+      "Bash(npx shadcn@latest add select --yes)",
+      "Bash(wait)",
+      "Bash(npx shadcn@latest add alert --yes)",
+      "Bash(npx shadcn@latest add dialog --yes)",
+      "Bash(npx shadcn@latest add dialog --yes --overwrite)",
+      "Bash(npx shadcn@latest add badge --yes)",
+      "Bash(npx shadcn@latest add separator --yes)"
+    ]
+  }
+}

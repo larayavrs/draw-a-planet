@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useCanvasStore } from "@/stores/canvasStore";
 import { GUEST_PALETTE, REGISTERED_PALETTE } from "@/lib/planet/limits";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import type { UserTier } from "@/types/tier";
 
 export function ColorPicker({ tier }: { tier: UserTier }) {
@@ -49,14 +50,14 @@ export function ColorPicker({ tier }: { tier: UserTier }) {
           {showWheel && (
             <div className="mt-3 flex flex-col gap-2 items-center">
               <HexColorPicker color={currentColor} onChange={setCurrentColor} />
-              <input
+              <Input
                 type="text"
                 value={currentColor}
                 onChange={(e) => {
                   const v = e.target.value;
                   if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setCurrentColor(v);
                 }}
-                className="w-full px-2 py-1 rounded-md bg-border-purple/40 border border-border-purple text-sm text-white font-mono text-center"
+                className="font-mono text-center"
                 maxLength={7}
               />
             </div>

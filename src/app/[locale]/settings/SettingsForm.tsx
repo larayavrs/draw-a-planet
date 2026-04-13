@@ -6,6 +6,9 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { TierBadge } from "@/components/ui/TierBadge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import type { UserTier } from "@/types/tier";
 
 interface Props {
@@ -42,27 +45,24 @@ export function SettingsForm({ userId, initialDisplayName, initialBio, tier, loc
     <div className="flex flex-col gap-5 sm:gap-6">
       {/* Profile */}
       <GlassCard className="p-5 sm:p-6 flex flex-col gap-4 sm:gap-5">
-        <div>
-          <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">
-            {t("display_name_label")}
-          </label>
-          <input
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="display-name">{t("display_name_label")}</Label>
+          <Input
+            id="display-name"
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="input-base w-full"
             maxLength={50}
           />
         </div>
-        <div>
-          <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">
-            {t("bio_label")}
-          </label>
-          <textarea
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="bio">{t("bio_label")}</Label>
+          <Textarea
+            id="bio"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             placeholder={t("bio_placeholder")}
-            className="input-base w-full resize-none h-24"
+            className="resize-none h-24"
             maxLength={200}
           />
           <p className="text-xs text-text-muted mt-1 text-right">{bio.length}/200</p>

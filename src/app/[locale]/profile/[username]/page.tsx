@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { TierBadge } from "@/components/ui/TierBadge";
@@ -12,26 +13,40 @@ interface Params {
   username: string;
 }
 
-export default async function ProfilePage({ params }: { params: Promise<Params> }) {
-  const { locale, username } = await params;
-  const t = await getTranslations("profile");
+async function getUserProfile(username: string) {
+  "use cache";
+  cacheLife({ revalidate: 300, stale: 60 }); // revalidate every 5 min
   const supabase = getSupabaseServiceClient();
-
   const { data: user } = await supabase
     .from("users")
     .select("id, username, display_name, tier, avatar_url, bio, created_at")
     .eq("username", username)
     .single();
+  return user;
+}
 
-  if (!user) notFound();
-
+async function getUserPlanets(userId: string) {
+  "use cache";
+  cacheLife({ revalidate: 300, stale: 60 }); // revalidate every 5 min
+  const supabase = getSupabaseServiceClient();
   const { data: planets } = await supabase
     .from("planets")
     .select("id, name, planet_type, texture_url, created_at, view_count, is_active")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("is_active", true)
     .order("created_at", { ascending: false })
     .limit(60);
+  return planets;
+}
+
+export default async function ProfilePage({ params }: { params: Promise<Params> }) {
+  const { locale, username } = await params;
+  const t = await getTranslations("profile");
+
+  const user = await getUserProfile(username);
+  if (!user) notFound();
+
+  const planets = await getUserPlanets(user.id);
 
   return (
     <div className="max-w-[1152px] mx-auto px-4 sm:px-6 py-8 sm:py-12">

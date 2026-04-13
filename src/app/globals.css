@@ -118,6 +118,18 @@
 }
 
 @theme inline {
+  /* ── App-specific design tokens ─────────────────────────────────────────── */
+  /* These power classes like text-lime, bg-sentry-purple, etc.               */
+  --color-lime:            #c2ef4e;
+  --color-sentry-purple:   #6a5fc1;
+  --color-deeper-purple:   #1a0e2e;
+  --color-darker-purple:   #120a24;
+  --color-deep-purple:     #2a1a4e;
+  --color-border-purple:   #362d59;
+  --color-text-muted:      #8b82a9;
+  --color-text-gray:       #cfcfdb;
+
+  /* ── Shadcn / radix design tokens ──────────────────────────────────────── */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
