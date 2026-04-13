@@ -1,5 +1,7 @@
 export type UserTier = "guest" | "registered" | "premium";
 
+export type CosmeticEffect = "sparkles" | "rings" | "aura";
+
 export type PlanetType =
   | "rocky"
   | "gaseous"

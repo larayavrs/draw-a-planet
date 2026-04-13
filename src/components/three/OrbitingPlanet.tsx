@@ -1,19 +1,30 @@
 "use client";
 
 import { useRef, useState, useCallback, useEffect } from "react";
-import { useFrame } from "@react-three/fiber";
-import { Html, Sphere } from "@react-three/drei";
+import { Html, Sphere, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
-import { computeOrbitPosition } from "@/lib/three/orbitMath";
 import type { Planet } from "@/types/planet";
 
-// Module-level texture cache — fetch once, reuse everywhere.
-// Key = URL, value = THREE.Texture promise.
+// ── Orbit registry ────────────────────────────────────────────────────────────
+// Each mounted OrbitingPlanet registers its mesh + orbit params here.
+// BoardContent's single useFrame reads this map to drive ALL positions at once,
+// avoiding n separate useFrame subscriptions.
+export type OrbitEntry = {
+  mesh: THREE.Mesh;
+  orbitParams: {
+    radius: number;
+    speed: number;
+    offset: number;
+    inclination: number;
+  };
+};
+export const orbitRegistry = new Map<string, OrbitEntry>();
+
+// ── Texture cache ─────────────────────────────────────────────────────────────
 const textureCache = new Map<string, Promise<THREE.Texture | null>>();
 
 async function loadTexture(url: string): Promise<THREE.Texture | null> {
   try {
-    // Fetch as blob → create object URL → load via Image → avoids CORS
     const res = await fetch(url);
     if (!res.ok) return null;
     const blob = await res.blob();
@@ -52,12 +63,10 @@ function getTexture(url: string): Promise<THREE.Texture | null> {
  * ────────────────────────────────────────────────────────────────── */
 export function OrbitingPlanet({
   planet,
-  getElapsed,
   isFocused,
   onClick,
 }: {
   planet: Planet;
-  getElapsed: () => number;
   isFocused: boolean;
   onClick: () => void;
 }) {
@@ -65,22 +74,32 @@ export function OrbitingPlanet({
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
   const [hovered, setHovered] = useState(false);
 
-  const orbitParams = {
-    radius: planet.orbit_radius,
-    speed: planet.orbit_speed,
-    offset: planet.orbit_offset,
-    inclination: planet.orbit_inclination,
-  };
+  // ── Register in the central orbit registry ────────────────────────────────
+  // BoardContent's single useFrame handles position + rotation for all planets.
+  useEffect(() => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    orbitRegistry.set(planet.id, {
+      mesh,
+      orbitParams: {
+        radius: planet.orbit_radius,
+        speed: planet.orbit_speed,
+        offset: planet.orbit_offset,
+        inclination: planet.orbit_inclination,
+      },
+    });
+    return () => {
+      orbitRegistry.delete(planet.id);
+    };
+  }, [
+    planet.id,
+    planet.orbit_radius,
+    planet.orbit_speed,
+    planet.orbit_offset,
+    planet.orbit_inclination,
+  ]);
 
-  useFrame(() => {
-    if (!meshRef.current) return;
-    const [x, y, z] = computeOrbitPosition(orbitParams, getElapsed());
-    meshRef.current.position.set(x, y, z);
-    meshRef.current.rotation.y += 0.003;
-  });
-
-  // Load texture once and assign directly to material ref — no React state,
-  // no re-renders, no lost textures on hover/focus changes.
+  // ── Lazy texture load — no React state, direct material mutation ──────────
   useEffect(() => {
     if (!planet.texture_url || !matRef.current) return;
 
@@ -92,12 +111,17 @@ export function OrbitingPlanet({
       matRef.current.needsUpdate = true;
     });
 
-    return () => { cancelled = true; };
-  }, [planet.texture_url]); // only re-run if URL changes
+    return () => {
+      cancelled = true;
+    };
+  }, [planet.texture_url]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClick = useCallback(() => onClick(), [onClick]);
 
   const radius = PLANET_RADIUS[planet.planet_type] ?? 1;
+  // Optimización A: 16×16 en lugar de 32×32 — visualmente idéntico a esta escala,
+  // 4× menos triángulos por planeta.
+  const segments = 16;
   const scale = isFocused ? 1.4 : hovered ? 1.1 : 1;
   const creator = planet.creator_username ?? null;
   const baseColor = getBaseColor(planet.planet_type);
@@ -107,7 +131,7 @@ export function OrbitingPlanet({
   return (
     <Sphere
       ref={meshRef}
-      args={[radius, 32, 32]}
+      args={[radius, segments, segments]}
       scale={scale}
       onClick={handleClick}
       onPointerOver={() => setHovered(true)}
@@ -122,10 +146,50 @@ export function OrbitingPlanet({
         emissiveIntensity={emissiveIntensity}
       />
 
+      {/* Cosmetic effects — premium only, based on user's choice at creation */}
+      {planet.cosmetic_effect === "sparkles" && (
+        <Sparkles
+          count={24}
+          scale={radius * 3.5}
+          size={1.2}
+          speed={0.35}
+          color="#c2ef4e"
+        />
+      )}
+
+      {planet.cosmetic_effect === "rings" && (
+        <mesh rotation-x={Math.PI / 2}>
+          <torusGeometry args={[radius * 1.7, 0.1, 6, 64]} />
+          <meshStandardMaterial
+            color="#c2ef4e"
+            transparent
+            opacity={0.65}
+            roughness={0.4}
+            metalness={0.6}
+          />
+        </mesh>
+      )}
+
+      {planet.cosmetic_effect === "aura" && (
+        <Sphere args={[radius * 2.2, 16, 16]}>
+          <meshBasicMaterial
+            color="#8b5cf6"
+            transparent
+            opacity={0.07}
+            side={THREE.BackSide}
+          />
+        </Sphere>
+      )}
+
       {/* Focus ring */}
       {isFocused && (
         <Sphere args={[radius * 1.5, 16, 16]}>
-          <meshBasicMaterial color="#6a5fc1" transparent opacity={0.15} wireframe />
+          <meshBasicMaterial
+            color="#6a5fc1"
+            transparent
+            opacity={0.15}
+            wireframe
+          />
         </Sphere>
       )}
 
@@ -157,13 +221,13 @@ const PLANET_RADIUS: Record<string, number> = {
 };
 
 const PLANET_BASE_COLOR: Record<string, string> = {
-  rocky:   "#8c5940",
+  rocky: "#8c5940",
   gaseous: "#d98c4d",
-  icy:     "#99ccf2",
-  lava:    "#d92513",
-  ocean:   "#2659b3",
-  desert:  "#d9bf73",
-  ringed:  "#bf9959",
+  icy: "#99ccf2",
+  lava: "#d92513",
+  ocean: "#2659b3",
+  desert: "#d9bf73",
+  ringed: "#bf9959",
 };
 
 function getBaseColor(type: string): string {

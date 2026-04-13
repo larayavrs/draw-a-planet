@@ -9,6 +9,7 @@ import { TierBadge } from "@/components/ui/TierBadge";
 import Link from "next/link";
 import Image from "next/image";
 import type { UserTier } from "@/types/tier";
+import { DeletePlanetButton } from "@/components/ui/DeletePlanetButton";
 
 interface Params {
   locale: string;
@@ -24,7 +25,7 @@ export default async function PlanetDetailPage({ params }: { params: Promise<Par
   const { data: planet } = await supabase
     .from("planets")
     .select(`
-      id, name, planet_type, texture_url, system_id,
+      id, name, planet_type, texture_url, system_id, user_id,
       tier_at_creation, lifespan_expires_at, view_count, created_at, is_active,
       users ( username, display_name, avatar_url, tier ),
       systems ( name, slug )
@@ -34,6 +35,10 @@ export default async function PlanetDetailPage({ params }: { params: Promise<Par
     .single();
 
   if (!planet) notFound();
+
+  // Check if the current user owns this planet
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
+  const isOwner = Boolean(currentUser && planet.user_id === currentUser.id);
 
   // Capture IP before after() — dynamic APIs (headers) are not available inside it.
   const headersList = await headers();
@@ -101,6 +106,16 @@ export default async function PlanetDetailPage({ params }: { params: Promise<Par
               <p className="text-text-muted text-sm">{t("by")} {t("anonymous")}</p>
             )}
           </div>
+
+          {isOwner && system && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <DeletePlanetButton
+                planetId={planet.id}
+                systemSlug={system.slug}
+                locale={locale}
+              />
+            </div>
+          )}
 
           <GlassCard className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>

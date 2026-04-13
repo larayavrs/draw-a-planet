@@ -1,4 +1,4 @@
-import type { PlanetType, StarType, UserTier } from "./tier";
+import type { PlanetType, StarType, UserTier, CosmeticEffect } from "./tier";
 
 export interface CanvasData {
   version: 1;
@@ -22,6 +22,7 @@ export interface Planet {
   orbit_offset: number;
   orbit_inclination: number;
   tier_at_creation: UserTier;
+  cosmetic_effect: CosmeticEffect | null;
   lifespan_expires_at: string | null;
   last_activity_at: string;
   is_active: boolean;

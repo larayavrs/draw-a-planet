@@ -105,7 +105,11 @@
     "resume": "Reanudar",
     "back_to_system": "← Volver al sistema",
     "draw_cta": "Empezar a dibujar",
-    "view_planet": "Ver planeta"
+    "view_planet": "Ver planeta",
+    "delete_planet": "Eliminar planeta",
+    "confirm_delete": "Confirmar eliminación",
+    "cancel": "Cancelar",
+    "deleting": "Eliminando..."
   },
   "planet_detail": {
     "by": "por",

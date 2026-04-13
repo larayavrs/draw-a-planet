@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { PlanetType } from "@/types/tier";
+import type { PlanetType, CosmeticEffect } from "@/types/tier";
 
 export type DrawTool = "brush" | "fill" | "eraser";
 
@@ -27,6 +27,8 @@ interface CanvasState {
   setPlanetType: (type: PlanetType) => void;
   selectedSystemId: string;
   setSelectedSystemId: (id: string) => void;
+  cosmeticEffect: CosmeticEffect | null;
+  setCosmeticEffect: (effect: CosmeticEffect | null) => void;
 
   // UI state
   isPublishing: boolean;
@@ -58,6 +60,8 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   setPlanetType: (planetType) => set({ planetType }),
   selectedSystemId: "",
   setSelectedSystemId: (selectedSystemId) => set({ selectedSystemId }),
+  cosmeticEffect: null,
+  setCosmeticEffect: (cosmeticEffect) => set({ cosmeticEffect }),
 
   isPublishing: false,
   setIsPublishing: (isPublishing) => set({ isPublishing }),
@@ -77,6 +81,7 @@ export const useCanvasStore = create<CanvasState>((set) => ({
       brushSize: 12,
       planetName: "",
       planetType: "rocky",
+      cosmeticEffect: null,
       isPublishing: false,
       publishError: null,
       publishedPlanetId: null,

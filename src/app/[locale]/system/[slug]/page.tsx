@@ -35,7 +35,7 @@ async function getSystemPlanets(systemId: string): Promise<Planet[]> {
       `
       id, name, planet_type, texture_url, system_id,
       orbit_radius, orbit_speed, orbit_offset, orbit_inclination,
-      tier_at_creation, lifespan_expires_at, is_active, view_count, created_at,
+      tier_at_creation, cosmetic_effect, lifespan_expires_at, is_active, view_count, created_at,
       user_id,
       users ( username, display_name, avatar_url )
     `,
@@ -112,6 +112,10 @@ async function SystemContent({
   locale: string;
 }) {
   const t = await getTranslations("system_board");
+  const { getSupabaseServerClient } = await import("@/lib/supabase/server");
+  const supabase = await getSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   const planets = await getSystemPlanets(system.id);
 
   return (
@@ -131,7 +135,7 @@ async function SystemContent({
             </GlassCard>
           </div>
         ) : (
-          <SystemBoard system={system} initialPlanets={planets} locale={locale} />
+          <SystemBoard system={system} initialPlanets={planets} locale={locale} currentUserId={user?.id ?? null} />
         )}
       </div>
 

@@ -19,6 +19,7 @@ import { useUserTier } from "@/hooks/useUserTier";
 import { useGuestSession } from "@/hooks/useGuestSession";
 import { fetchSystems } from "@/lib/client-cache";
 import type { System } from "@/types/planet";
+import type { CosmeticEffect } from "@/types/tier";
 import type { TemplateId } from "@/components/canvas/PlanetTemplates";
 
 export default function DrawPage({
@@ -103,6 +104,7 @@ export default function DrawPage({
           canvas_data,
           texture_data_url,
           system_id: store.selectedSystemId,
+          cosmetic_effect: store.cosmeticEffect,
         }),
       });
 
@@ -295,6 +297,9 @@ function PublishPanel({
         </div>
       )}
 
+      {/* Cosmetic effect picker — premium only */}
+      {!tierLoading && isPremium && <CosmeticEffectPicker />}
+
       {/* Premium perks / upsell */}
       {!tierLoading &&
         (isPremium ? <PremiumPerks /> : <UpgradeTeaser locale={locale} />)}
@@ -354,6 +359,57 @@ function PremiumPerks() {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+// ─── Cosmetic effect picker ───────────────────────────────────────────────────
+
+const EFFECTS: { id: CosmeticEffect; label: string; icon: string; desc: string }[] = [
+  { id: "sparkles", label: "Destellos", icon: "✦", desc: "Partículas brillantes" },
+  { id: "rings",    label: "Anillos",   icon: "⬭", desc: "Anillos de Saturno" },
+  { id: "aura",     label: "Aura",      icon: "◎", desc: "Halo luminoso" },
+];
+
+function CosmeticEffectPicker() {
+  const { cosmeticEffect, setCosmeticEffect } = useCanvasStore();
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold text-lime uppercase tracking-wider">
+          ✦ Efecto visual
+        </p>
+        {cosmeticEffect && (
+          <button
+            onClick={() => setCosmeticEffect(null)}
+            className="text-[10px] text-text-muted hover:text-white transition-colors"
+          >
+            quitar
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        {EFFECTS.map((e) => {
+          const active = cosmeticEffect === e.id;
+          return (
+            <button
+              key={e.id}
+              onClick={() => setCosmeticEffect(active ? null : e.id)}
+              className={[
+                "flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 border transition-all duration-150",
+                active
+                  ? "border-lime/60 bg-lime/10 text-lime shadow-[0_0_10px_rgba(194,239,78,0.2)]"
+                  : "border-border-purple/50 bg-border-purple/20 text-text-muted hover:border-border-purple/80 hover:text-white",
+              ].join(" ")}
+            >
+              <span className="text-lg leading-none">{e.icon}</span>
+              <span className="text-[10px] font-semibold">{e.label}</span>
+              <span className="text-[9px] opacity-60">{e.desc}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

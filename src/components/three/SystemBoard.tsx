@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useCallback, useEffect, useRef } from "react";
+import React, { Suspense, useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { Stars, OrbitControls } from "@react-three/drei";
@@ -10,7 +10,8 @@ import * as THREE from "three";
 const preloadLoader = new THREE.TextureLoader();
 import Link from "next/link";
 import { CentralStar } from "./CentralStar";
-import { OrbitingPlanet } from "./OrbitingPlanet";
+import { OrbitingPlanet, orbitRegistry } from "./OrbitingPlanet";
+import { computeOrbitPosition } from "@/lib/three/orbitMath";
 import { useSystemRealtime } from "@/hooks/useSystemRealtime";
 import type { Planet, System } from "@/types/planet";
 
@@ -19,6 +20,7 @@ interface SystemBoardProps {
   initialPlanets: Planet[];
   mini?: boolean;
   locale?: string;
+  currentUserId?: string | null;
 }
 
 /* ──────────────────────────────────────────────────────────────────
@@ -64,12 +66,18 @@ function BoardContent({
   getElapsed,
   focusedPlanet,
   onFocusPlanet,
+  paused,
+  pauseStartMsRef,
+  totalPauseMsRef,
 }: {
   system: System;
   planets: Planet[];
   getElapsed: () => number;
   focusedPlanet: Planet | null;
   onFocusPlanet: (planet: Planet | null) => void;
+  paused: boolean;
+  pauseStartMsRef: React.MutableRefObject<number>;
+  totalPauseMsRef: React.MutableRefObject<number>;
 }) {
   const { camera } = useThree();
 
@@ -79,12 +87,34 @@ function BoardContent({
   const smoothPos = useRef(new THREE.Vector3(0, 35, 75));
   const smoothLookAt = useRef(new THREE.Vector3(0, 0, 0));
 
-  // Smoothly follow focused planet or return to default view
+  // Single useFrame for everything — pause tracking, all planet positions, camera.
+  // Replaces: ClockSync component + n per-planet useFrame subscriptions.
   useFrame(() => {
+    // ── B. Pause tracking (was ClockSync) ──
+    if (paused) {
+      if (pauseStartMsRef.current === 0)
+        pauseStartMsRef.current = performance.now();
+    } else {
+      if (pauseStartMsRef.current > 0) {
+        totalPauseMsRef.current +=
+          performance.now() - pauseStartMsRef.current;
+        pauseStartMsRef.current = 0;
+      }
+    }
+
+    const elapsed = getElapsed();
+
+    // ── B. All planet positions + rotations in one loop ──
+    for (const entry of orbitRegistry.values()) {
+      const [x, y, z] = computeOrbitPosition(entry.orbitParams, elapsed);
+      entry.mesh.position.set(x, y, z);
+      entry.mesh.rotation.y += 0.003;
+    }
+
+    // ── Camera follow ──
     if (focusedPlanet) {
-      // Use orbit math to compute current position (same as OrbitingPlanet)
       const angle =
-        focusedPlanet.orbit_offset + getElapsed() * focusedPlanet.orbit_speed;
+        focusedPlanet.orbit_offset + elapsed * focusedPlanet.orbit_speed;
       const px = Math.cos(angle) * focusedPlanet.orbit_radius;
       const pz = Math.sin(angle) * focusedPlanet.orbit_radius;
       const py =
@@ -99,7 +129,6 @@ function BoardContent({
       camLookAt.current.set(0, 0, 0);
     }
 
-    // Smooth interpolation
     smoothPos.current.lerp(camTarget.current, 0.04);
     smoothLookAt.current.lerp(camLookAt.current, 0.06);
     camera.position.copy(smoothPos.current);
@@ -123,12 +152,11 @@ function BoardContent({
       {/* Central star */}
       <CentralStar starType={system.star_type} />
 
-      {/* Orbiting planets */}
+      {/* Orbiting planets — position/rotation driven by the single useFrame above */}
       {planets.map((planet) => (
         <OrbitingPlanet
           key={planet.id}
           planet={planet}
-          getElapsed={getElapsed}
           isFocused={focusedPlanet?.id === planet.id}
           onClick={() =>
             onFocusPlanet(focusedPlanet?.id === planet.id ? null : planet)
@@ -187,17 +215,22 @@ export function SystemBoard({
   initialPlanets,
   mini = false,
   locale = "en",
+  currentUserId = null,
 }: SystemBoardProps) {
   const t = useTranslations("system_board");
   const [planets, setPlanets] = useState<Planet[]>(initialPlanets);
+  const [deleteState, setDeleteState] = useState<"idle" | "confirm" | "pending">("idle");
 
   // Kick off parallel texture preloads before any OrbitingPlanet mounts.
   // THREE.Cache (enabled in OrbitingPlanet module) stores completed loads by URL,
   // so when each planet's useEffect fires it gets an instant cache hit.
   useEffect(() => {
+    // C. Preload solo los primeros 30 (los más recientes).
+    // El resto carga on-demand cuando su OrbitingPlanet monta.
     const urls = initialPlanets
       .map((p) => p.texture_url)
-      .filter((u): u is string => Boolean(u));
+      .filter((u): u is string => Boolean(u))
+      .slice(0, 30);
     urls.forEach((url) => {
       preloadLoader.load(
         url,
@@ -244,6 +277,27 @@ export function SystemBoard({
     return () => window.removeEventListener("keydown", onEsc);
   }, []);
 
+  // Reset delete confirmation when focused planet changes
+  useEffect(() => {
+    setDeleteState("idle");
+  }, [focusedPlanet?.id]);
+
+  async function handleDeletePlanet() {
+    if (!focusedPlanet) return;
+    setDeleteState("pending");
+    try {
+      const res = await fetch(`/api/planets/${focusedPlanet.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setPlanets((prev) => prev.filter((p) => p.id !== focusedPlanet.id));
+        setFocusedPlanet(null);
+      } else {
+        setDeleteState("idle");
+      }
+    } catch {
+      setDeleteState("idle");
+    }
+  }
+
   // Unfocus when the focused planet is removed
   useEffect(() => {
     if (focusedPlanet && !planets.find((p) => p.id === focusedPlanet.id)) {
@@ -267,24 +321,6 @@ export function SystemBoard({
       1000
     );
   }, []);
-
-  // Clock: every frame, accumulate pause time
-  function ClockSync() {
-    useFrame(() => {
-      if (paused) {
-        if (pauseStartMsRef.current === 0) {
-          pauseStartMsRef.current = performance.now();
-        }
-      } else {
-        if (pauseStartMsRef.current > 0) {
-          totalPauseMsRef.current +=
-            performance.now() - pauseStartMsRef.current;
-          pauseStartMsRef.current = 0;
-        }
-      }
-    });
-    return null;
-  }
 
   return (
     <div
@@ -312,13 +348,15 @@ export function SystemBoard({
         />
         <Suspense fallback={null}>
           <FocusRecovery />
-          <ClockSync />
           <BoardContent
             system={system}
             planets={planets}
             getElapsed={getElapsed}
             focusedPlanet={focusedPlanet}
             onFocusPlanet={setFocusedPlanet}
+            paused={paused}
+            pauseStartMsRef={pauseStartMsRef}
+            totalPauseMsRef={totalPauseMsRef}
           />
         </Suspense>
       </Canvas>
@@ -421,6 +459,44 @@ export function SystemBoard({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </Link>
+
+            {/* Delete — only for the planet's owner */}
+            {currentUserId && focusedPlanet.user_id === currentUserId && (
+              <div className="mt-2">
+                {deleteState === "idle" && (
+                  <button
+                    onClick={() => setDeleteState("confirm")}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 transition-colors py-2 text-sm text-red-400"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    {t("delete_planet")}
+                  </button>
+                )}
+                {deleteState === "confirm" && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setDeleteState("idle")}
+                      className="flex-1 rounded-lg border border-border-purple bg-border-purple/20 hover:bg-border-purple/40 transition-colors py-2 text-xs text-text-muted"
+                    >
+                      {t("cancel")}
+                    </button>
+                    <button
+                      onClick={handleDeletePlanet}
+                      className="flex-1 rounded-lg border border-red-500/60 bg-red-500/20 hover:bg-red-500/30 transition-colors py-2 text-xs text-red-400 font-semibold"
+                    >
+                      {t("confirm_delete")}
+                    </button>
+                  </div>
+                )}
+                {deleteState === "pending" && (
+                  <div className="w-full rounded-lg border border-red-500/20 bg-red-500/10 py-2 text-center text-xs text-red-400/60">
+                    {t("deleting")}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

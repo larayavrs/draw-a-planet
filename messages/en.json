@@ -105,7 +105,11 @@
     "resume": "Resume",
     "back_to_system": "← Back to system",
     "draw_cta": "Start Drawing",
-    "view_planet": "View planet"
+    "view_planet": "View planet",
+    "delete_planet": "Delete planet",
+    "confirm_delete": "Confirm delete",
+    "cancel": "Cancel",
+    "deleting": "Deleting..."
   },
   "planet_detail": {
     "by": "by",

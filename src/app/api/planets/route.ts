@@ -12,21 +12,8 @@ import {
   TEXTURE_MAX_BYTES,
 } from "@/lib/planet/limits";
 import { computeOrbitPlacement } from "@/lib/three/orbitMath";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import type { UserTier } from "@/types/tier";
-
-// Simple in-process rate limit store (per user_id, requests per minute)
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
-function checkRateLimit(userId: string, maxPerMinute: number): boolean {
-  const now = Date.now();
-  const entry = rateLimitStore.get(userId);
-  if (!entry || entry.resetAt < now) {
-    rateLimitStore.set(userId, { count: 1, resetAt: now + 60_000 });
-    return true;
-  }
-  if (entry.count >= maxPerMinute) return false;
-  entry.count++;
-  return true;
-}
 
 const CreatePlanetSchema = z.object({
   name: z.string().min(1).max(40),
@@ -34,6 +21,7 @@ const CreatePlanetSchema = z.object({
   canvas_data: z.unknown(),
   texture_data_url: z.string().regex(/^data:image\/(png|jpeg|webp);base64,/),
   system_id: z.string().uuid(),
+  cosmetic_effect: z.enum(["sparkles", "rings", "aura"]).nullable().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -51,7 +39,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const { name, planet_type, canvas_data, texture_data_url, system_id } = parsed.data;
+  const { name, planet_type, canvas_data, texture_data_url, system_id, cosmetic_effect } = parsed.data;
 
   // ── 2. Identify caller (auth user or guest JWT) ───────────────────────────
   const authHeader = req.headers.get("authorization");
@@ -93,11 +81,15 @@ export async function POST(req: NextRequest) {
   }
 
   // ── 3. Rate limit (registered+) ──────────────────────────────────────────
-  if (userId && !checkRateLimit(userId, 10)) {
-    return NextResponse.json(
-      { error: "Too many requests" },
-      { status: 429, headers: { "Retry-After": "60" } }
-    );
+  if (userId) {
+    const max = RATE_LIMITS["planet:create"][tier === "premium" ? "premium" : "registered"];
+    const rl = checkRateLimit("planet:create", userId, max);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetInMs / 1000)) } },
+      );
+    }
   }
 
   // ── 4. Tier-gate planet type ──────────────────────────────────────────────
@@ -199,6 +191,8 @@ export async function POST(req: NextRequest) {
       orbit_inclination: orbit.inclination,
       tier_at_creation: tier,
       lifespan_expires_at: lifespanDate?.toISOString() ?? null,
+      // Only persist for premium; silently ignore for other tiers
+      cosmetic_effect: tier === "premium" ? (cosmetic_effect ?? null) : null,
     })
     .select()
     .single();
