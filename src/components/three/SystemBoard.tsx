@@ -45,14 +45,6 @@ function BoardContent({
   // Smoothly follow focused planet or return to default view
   useFrame(() => {
     if (focusedPlanet) {
-      // Get the mesh world position of the focused planet
-      const mesh = planets
-        .map((p) => ({
-          p,
-          el: document.querySelector(`[data-planet-id="${p.id}"]`) as HTMLElement | null,
-        }))
-        .find((x) => x.p.id === focusedPlanet.id);
-
       // Use orbit math to compute current position (same as OrbitingPlanet)
       const angle =
         focusedPlanet.orbit_offset + getElapsed() * focusedPlanet.orbit_speed;
@@ -79,8 +71,17 @@ function BoardContent({
 
   return (
     <>
+      <color attach="background" args={["#000000"]} />
       {/* Background stars */}
-      <Stars radius={200} depth={60} count={3000} factor={3} saturation={0} fade speed={0.5} />
+      <Stars
+        radius={200}
+        depth={60}
+        count={3000}
+        factor={3}
+        saturation={0}
+        fade
+        speed={0.5}
+      />
 
       {/* Central star */}
       <CentralStar starType={system.star_type} />
@@ -92,7 +93,9 @@ function BoardContent({
           planet={planet}
           getElapsed={getElapsed}
           isFocused={focusedPlanet?.id === planet.id}
-          onClick={() => onFocusPlanet(focusedPlanet?.id === planet.id ? null : planet)}
+          onClick={() =>
+            onFocusPlanet(focusedPlanet?.id === planet.id ? null : planet)
+          }
         />
       ))}
 
@@ -109,10 +112,44 @@ function BoardContent({
   );
 }
 
+function FocusRecovery() {
+  const { gl, invalidate } = useThree();
+
+  useEffect(() => {
+    const recover = () => {
+      const renderer = gl as THREE.WebGLRenderer & {
+        forceContextRestore?: () => void;
+      };
+      const ctx = renderer.getContext();
+      if (ctx && "isContextLost" in ctx && ctx.isContextLost()) {
+        renderer.forceContextRestore?.();
+      }
+      invalidate();
+    };
+
+    const onVisibility = () => {
+      if (!document.hidden) recover();
+    };
+
+    window.addEventListener("focus", recover);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", recover);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [gl, invalidate]);
+
+  return null;
+}
+
 /* ──────────────────────────────────────────────────────────────────
  *  SystemBoard — manages state, passes data into canvas
  * ────────────────────────────────────────────────────────────────── */
-export function SystemBoard({ system, initialPlanets, mini = false }: SystemBoardProps) {
+export function SystemBoard({
+  system,
+  initialPlanets,
+  mini = false,
+}: SystemBoardProps) {
   const [planets, setPlanets] = useState<Planet[]>(initialPlanets);
 
   // Kick off parallel texture preloads before any OrbitingPlanet mounts.
@@ -123,9 +160,16 @@ export function SystemBoard({ system, initialPlanets, mini = false }: SystemBoar
       .map((p) => p.texture_url)
       .filter((u): u is string => Boolean(u));
     urls.forEach((url) => {
-      preloadLoader.load(url, (t) => { t.colorSpace = THREE.SRGBColorSpace; }, undefined, () => {});
+      preloadLoader.load(
+        url,
+        (t) => {
+          t.colorSpace = THREE.SRGBColorSpace;
+        },
+        undefined,
+        () => {},
+      );
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialPlanets]);
   const [paused, setPaused] = useState(false);
   const [focusedPlanet, setFocusedPlanet] = useState<Planet | null>(null);
 
@@ -133,6 +177,16 @@ export function SystemBoard({ system, initialPlanets, mini = false }: SystemBoar
   const startTimeRef = useRef(performance.now());
   const pauseStartMsRef = useRef(0);
   const totalPauseMsRef = useRef(0);
+
+  useEffect(() => {
+    // Keep board state in sync when navigating across systems.
+    setPlanets(initialPlanets);
+    setFocusedPlanet(null);
+    setPaused(false);
+    startTimeRef.current = performance.now();
+    pauseStartMsRef.current = 0;
+    totalPauseMsRef.current = 0;
+  }, [system.id, initialPlanets]);
 
   const handleNewPlanet = useCallback((planet: Planet) => {
     setPlanets((prev) => {
@@ -142,6 +196,14 @@ export function SystemBoard({ system, initialPlanets, mini = false }: SystemBoar
   }, []);
 
   useSystemRealtime(system.id, handleNewPlanet);
+
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFocusedPlanet(null);
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, []);
 
   // Unfocus when the focused planet is removed
   useEffect(() => {
@@ -154,9 +216,17 @@ export function SystemBoard({ system, initialPlanets, mini = false }: SystemBoar
   const getElapsed = useCallback(() => {
     if (pauseStartMsRef.current > 0) {
       // Still paused — return the frozen time
-      return (pauseStartMsRef.current - totalPauseMsRef.current - startTimeRef.current) / 1000;
+      return (
+        (pauseStartMsRef.current -
+          totalPauseMsRef.current -
+          startTimeRef.current) /
+        1000
+      );
     }
-    return (performance.now() - totalPauseMsRef.current - startTimeRef.current) / 1000;
+    return (
+      (performance.now() - totalPauseMsRef.current - startTimeRef.current) /
+      1000
+    );
   }, []);
 
   // Clock: every frame, accumulate pause time
@@ -168,7 +238,8 @@ export function SystemBoard({ system, initialPlanets, mini = false }: SystemBoar
         }
       } else {
         if (pauseStartMsRef.current > 0) {
-          totalPauseMsRef.current += performance.now() - pauseStartMsRef.current;
+          totalPauseMsRef.current +=
+            performance.now() - pauseStartMsRef.current;
           pauseStartMsRef.current = 0;
         }
       }
@@ -177,14 +248,31 @@ export function SystemBoard({ system, initialPlanets, mini = false }: SystemBoar
   }
 
   return (
-    <div className="relative w-full h-full" style={{ minHeight: mini ? 400 : undefined }}>
+    <div
+      className="relative w-full h-full"
+      style={{ minHeight: mini ? 400 : undefined }}
+    >
       <Canvas
         camera={{ position: [0, 35, 75], fov: 55 }}
-        gl={{ antialias: true, alpha: true }}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance",
+        }}
+        onCreated={({ gl }) => {
+          gl.setClearColor("#000000", 1);
+        }}
+        onPointerMissed={() => setFocusedPlanet(null)}
       >
         <ambientLight intensity={0.6} />
-        <pointLight position={[0, 0, 0]} intensity={1.5} color="#fff8e7" distance={200} />
+        <pointLight
+          position={[0, 0, 0]}
+          intensity={1.5}
+          color="#fff8e7"
+          distance={200}
+        />
         <Suspense fallback={null}>
+          <FocusRecovery />
           <ClockSync />
           <BoardContent
             system={system}
@@ -233,20 +321,34 @@ export function SystemBoard({ system, initialPlanets, mini = false }: SystemBoar
         <div className="absolute top-16 right-4 z-10 w-64 rounded-xl border border-border-purple bg-darker-purple/90 backdrop-blur-sm shadow-lg">
           <div className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-bold text-white truncate">{focusedPlanet.name}</h3>
+              <h3 className="text-base font-bold text-white truncate">
+                {focusedPlanet.name}
+              </h3>
               <button
                 onClick={() => setFocusedPlanet(null)}
                 className="text-text-muted hover:text-white transition-colors ml-2"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-text-muted">Tipo</span>
-                <span className="text-white capitalize">{focusedPlanet.planet_type}</span>
+                <span className="text-white capitalize">
+                  {focusedPlanet.planet_type}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">Creado por</span>
@@ -268,7 +370,9 @@ export function SystemBoard({ system, initialPlanets, mini = false }: SystemBoar
                 <div className="flex justify-between">
                   <span className="text-text-muted">Expira</span>
                   <span className="text-white">
-                    {new Date(focusedPlanet.lifespan_expires_at).toLocaleDateString()}
+                    {new Date(
+                      focusedPlanet.lifespan_expires_at,
+                    ).toLocaleDateString()}
                   </span>
                 </div>
               )}

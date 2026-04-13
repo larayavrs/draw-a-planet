@@ -204,8 +204,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html {
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
+    overflow-x: hidden;
   }
 }

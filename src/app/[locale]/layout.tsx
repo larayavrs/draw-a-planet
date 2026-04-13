@@ -64,14 +64,18 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
+<<<<<<< HEAD
       <body
         className={`${spaceGrotesk.className} min-h-full flex flex-col antialiased h-full`}
       >
+=======
+      <body className="min-h-screen flex flex-col antialiased font-sans overflow-x-hidden">
+>>>>>>> b9529bfcd6e545f034e88ebc74af5355149a2f5b
         <Suspense>
           <NextIntlClientProvider messages={messages}>
             <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
               <Navbar locale={locale} />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1 w-full">{children}</main>
               <Footer locale={locale} />
             </ThemeProvider>
           </NextIntlClientProvider>

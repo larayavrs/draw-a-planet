@@ -13,13 +13,16 @@ const BG_COLOR = "#1a0e2e";
 type FC = {
   dispose: () => void;
   requestRenderAll: () => void;
+  renderAll: () => void;
   getObjects: () => unknown[];
-  remove: (o: unknown) => void;
+  remove: (...o: unknown[]) => void;
   add: (o: unknown) => void;
   sendObjectToBack: (o: unknown) => void;
   getZoom: () => number;
   setZoom: (z: number) => void;
   setDimensions: (d: { width: number; height: number }) => void;
+  // loadFromJSON returns a Promise in Fabric v7
+  loadFromJSON: (json: object) => Promise<FC>;
   toJSON: () => object;
   toDataURL: (o: object) => string;
   clipPath: unknown;
@@ -38,208 +41,329 @@ interface PlanetCanvasProps {
 
 export function PlanetCanvas({ tier = "guest" }: PlanetCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   // Keep a ref to the Fabric instance for cleanup even across async boundaries
-  const fcRef        = useRef<FC | null>(null);
-  const isPremium    = tier === "premium";
+  const fcRef = useRef<FC | null>(null);
+  const isPremium = tier === "premium";
 
   useEffect(() => {
     let disposed = false;
-    // Collects synchronous cleanup fns set up inside the async block
     const cleanups: Array<() => void> = [];
 
-    import("fabric").then(({ Canvas, PencilBrush, Circle, Rect, Path, Line }) => {
-      if (disposed || !containerRef.current || !canvasRef.current) return;
+    // ── Undo history: stack of serialized canvas snapshots ──────────────
+    // Each entry is the full toJSON() output after each action.
+    const history: object[] = [];
+    const MAX_HISTORY = 30;
 
-      // ── 1. Fabric canvas at full 512×512 ─────────────────────────────
-      const fc = new Canvas(canvasRef.current, {
-        width: CANVAS_SIZE,
-        height: CANVAS_SIZE,
-        backgroundColor: BG_COLOR,
-        isDrawingMode: true,
-        selection: false,
-        renderOnAddRemove: false,
-      }) as unknown as FC;
+    import("fabric").then(
+      ({ Canvas, PencilBrush, Circle, Rect, Path, Line }) => {
+        if (disposed || !containerRef.current || !canvasRef.current) return;
 
-      fcRef.current = fc;
+        // ── 1. Fabric canvas at full 512×512 ─────────────────────────────
+        const fc = new Canvas(canvasRef.current, {
+          width: CANVAS_SIZE,
+          height: CANVAS_SIZE,
+          backgroundColor: BG_COLOR,
+          isDrawingMode: true,
+          selection: false,
+          renderOnAddRemove: false,
+        }) as unknown as FC;
 
-      // ── 2. Circular clip ──────────────────────────────────────────────
-      // Circle at left:0, top:0, radius:256 → covers full internal 512×512.
-      // With setZoom(s) everything (including the clip) scales proportionally,
-      // so the circle always fills the visual viewport exactly.
-      const clipCircle = new Circle({
-        radius: CANVAS_SIZE / 2,
-        left: 0,
-        top: 0,
-        originX: "left",
-        originY: "top",
-      });
-      fc.clipPath = clipCircle;
+        fcRef.current = fc;
 
-      // ── 3. Initial pencil brush ───────────────────────────────────────
-      const brush = new PencilBrush(fc as never);
-      const { currentColor, brushSize } = useCanvasStore.getState();
-      (brush as unknown as { color: string; width: number }).color = currentColor;
-      (brush as unknown as { color: string; width: number }).width = brushSize;
-      fc.freeDrawingBrush = brush as unknown as FC["freeDrawingBrush"];
-
-      // ── 4. Responsive scaling via Fabric's wrapperEl ──────────────────
-      // Fabric creates a wrapper div that contains BOTH the lower canvas
-      // (drawing surface) and the upper canvas (event handler).
-      // The bug in the old code was CSS-scaling only the lower canvas,
-      // leaving the upper canvas unscaled → clicks misaligned with visuals.
-      // We scale the WRAPPER so both canvases move together.
-      const wrapper = fc.wrapperEl;
-      wrapper.style.transformOrigin = "top left";
-      wrapper.style.position = "absolute";
-      wrapper.style.top = "0";
-      wrapper.style.left = "0";
-      wrapper.style.pointerEvents = "auto";
-
-      function applyScale() {
-        const cont = containerRef.current;
-        if (!cont || disposed) return;
-        const s = Math.min(1, cont.clientWidth / CANVAS_SIZE);
-        wrapper.style.transform = `scale(${s})`;
-        // Inform Fabric of the zoom so its internal pointer math is correct
-        fc.setZoom(s);
-        fc.setDimensions({ width: CANVAS_SIZE, height: CANVAS_SIZE });
-        fc.requestRenderAll();
-      }
-
-      applyScale();
-
-      const ro = new ResizeObserver(applyScale);
-      ro.observe(containerRef.current);
-      cleanups.push(() => ro.disconnect());
-
-      // ── 5. Fill tool via Fabric's mouse:down ──────────────────────────
-      // We register ONE handler and read current tool/color via getState()
-      // to avoid stale closures in re-renders.
-      const fillHandler = async () => {
-        const { tool, currentColor: col } = useCanvasStore.getState();
-        if (tool !== "fill") return;
-
-        const fillRect = new Rect({
-          left: 0, top: 0,
-          width: CANVAS_SIZE, height: CANVAS_SIZE,
-          fill: col,
-          selectable: false, evented: false,
+        // ── 2. Circular clip ──────────────────────────────────────────────
+        const clipCircle = new Circle({
+          radius: CANVAS_SIZE / 2,
+          left: 0,
+          top: 0,
+          originX: "left",
+          originY: "top",
         });
-        fc.add(fillRect as unknown as unknown);
-        fc.sendObjectToBack(fillRect as unknown as unknown);
-        fc.requestRenderAll();
-      };
+        fc.clipPath = clipCircle;
 
-      fc.on("mouse:down", fillHandler);
-      cleanups.push(() => fc.off("mouse:down", fillHandler));
+        // ── 3. Initial pencil brush ───────────────────────────────────────
+        const brush = new PencilBrush(fc as never);
+        const { currentColor, brushSize } = useCanvasStore.getState();
+        (brush as unknown as { color: string; width: number }).color =
+          currentColor;
+        (brush as unknown as { color: string; width: number }).width =
+          brushSize;
+        fc.freeDrawingBrush = brush as unknown as FC["freeDrawingBrush"];
 
-      // ── 6. Sync store state → Fabric ──────────────────────────────────
-      const unsubStore = useCanvasStore.subscribe((state, prev) => {
-        if (disposed || !fcRef.current) return;
-        const fc_ = fcRef.current;
+        // ── 4. Responsive scaling ─────────────────────────────────────────
+        const wrapper = fc.wrapperEl;
+        wrapper.style.transformOrigin = "top left";
+        wrapper.style.position = "absolute";
+        wrapper.style.top = "0";
+        wrapper.style.left = "0";
+        wrapper.style.pointerEvents = "auto";
 
-        if (state.tool !== prev.tool || state.currentColor !== prev.currentColor) {
-          if (state.tool === "fill") {
-            fc_.isDrawingMode = false;
-          } else if (state.tool === "eraser") {
-            fc_.isDrawingMode = true;
-            if (fc_.freeDrawingBrush) fc_.freeDrawingBrush.color = BG_COLOR;
+        function applyScale() {
+          const cont = containerRef.current;
+          if (!cont || disposed) return;
+          const s = Math.min(1, cont.clientWidth / CANVAS_SIZE);
+          wrapper.style.transform = `scale(${s})`;
+          fc.setZoom(s);
+          fc.setDimensions({ width: CANVAS_SIZE, height: CANVAS_SIZE });
+          fc.requestRenderAll();
+        }
+
+        applyScale();
+
+        const ro = new ResizeObserver(applyScale);
+        ro.observe(containerRef.current);
+        cleanups.push(() => ro.disconnect());
+
+        // ── Helpers ───────────────────────────────────────────────────────
+
+        /** Snapshot the current canvas state onto the undo stack. */
+        function pushHistory() {
+          const snap = fc.toJSON();
+          history.push(snap);
+          if (history.length > MAX_HISTORY) history.shift();
+        }
+
+        /**
+         * Restore a snapshot. loadFromJSON re-adds all objects and restores
+         * backgroundColor, so we just need to re-attach the clipPath after.
+         */
+        async function restoreSnapshot(snap: object) {
+          await fc.loadFromJSON(snap);
+          // Re-attach the circular clip (loadFromJSON may clear it if it
+          // wasn't part of the snapshot; we always keep the clip separate)
+          if (!fc.clipPath) fc.clipPath = clipCircle;
+          fc.requestRenderAll();
+        }
+
+        // ── 5. Fill tool ──────────────────────────────────────────────────
+        // Find an existing fill-circle by tag so we can replace its color
+        // instead of stacking multiple circles on top of each other.
+        const FILL_TAG = "__planetFill__";
+
+        function applyFill(col: string) {
+          // Look for an existing fill circle (tagged by our custom prop)
+          const objs = fc.getObjects() as Array<Record<string, unknown>>;
+          const existing = objs.find((o) => o[FILL_TAG] === true);
+
+          if (existing) {
+            // Update color in-place — no need to remove/re-add
+            (
+              existing as unknown as { set: (k: string, v: unknown) => void }
+            ).set("fill", col);
           } else {
-            fc_.isDrawingMode = true;
-            if (fc_.freeDrawingBrush) fc_.freeDrawingBrush.color = state.currentColor;
+            const fillCircle = new Circle({
+              left: CANVAS_SIZE / 2,
+              top: CANVAS_SIZE / 2,
+              radius: CANVAS_SIZE / 2,
+              fill: col,
+              originX: "center",
+              originY: "center",
+              selectable: false,
+              evented: false,
+            }) as unknown as Record<string, unknown>;
+            fillCircle[FILL_TAG] = true;
+            fc.add(fillCircle as never);
+            fc.sendObjectToBack(fillCircle as never);
           }
+
+          fc.requestRenderAll();
         }
 
-        if (state.brushSize !== prev.brushSize && fc_.freeDrawingBrush) {
-          fc_.freeDrawingBrush.width = state.brushSize;
-        }
-      });
-      cleanups.push(unsubStore);
+        const fillHandler = () => {
+          const { tool, currentColor: col } = useCanvasStore.getState();
+          if (tool !== "fill") return;
+          applyFill(col);
+          // push the snapshot AFTER the fill has been applied
+          pushHistory();
+        };
 
-      // ── 7. Register canvas actions in store ───────────────────────────
-      useCanvasStore.getState().registerActions({
-        undo() {
+        fc.on("mouse:down", fillHandler);
+        cleanups.push(() => fc.off("mouse:down", fillHandler));
+
+        // ── 6. Undo: snapshot AFTER the stroke is committed
+        // Push a history snapshot when a path is created (end of stroke).
+        const pathCreatedHandler = () => {
+          pushHistory();
+        };
+        fc.on("path:created", pathCreatedHandler);
+        cleanups.push(() => fc.off("path:created", pathCreatedHandler));
+
+        // ── 7. Sync store state → Fabric ──────────────────────────────────
+        const unsubStore = useCanvasStore.subscribe((state, prev) => {
+          if (disposed || !fcRef.current) return;
           const fc_ = fcRef.current;
-          if (!fc_) return;
-          const objs = fc_.getObjects();
-          if (objs.length > 0) {
-            fc_.remove(objs[objs.length - 1]);
+
+          if (
+            state.tool !== prev.tool ||
+            state.currentColor !== prev.currentColor
+          ) {
+            if (state.tool === "fill") {
+              fc_.isDrawingMode = false;
+            } else if (state.tool === "eraser") {
+              fc_.isDrawingMode = true;
+              if (fc_.freeDrawingBrush) fc_.freeDrawingBrush.color = BG_COLOR;
+            } else {
+              fc_.isDrawingMode = true;
+              if (fc_.freeDrawingBrush)
+                fc_.freeDrawingBrush.color = state.currentColor;
+            }
+          }
+
+          if (state.brushSize !== prev.brushSize && fc_.freeDrawingBrush) {
+            fc_.freeDrawingBrush.width = state.brushSize;
+          }
+        });
+        cleanups.push(unsubStore);
+
+        // ── 8. Register canvas actions in store ───────────────────────────
+        const myActions = {
+          undo: () => {
+            // We maintain history where the last element is the CURRENT state.
+            // Undo should discard the current state and restore the previous one.
+            if (history.length <= 1) return;
+            // discard current
+            history.pop();
+            const snap = history[history.length - 1];
+            restoreSnapshot(snap);
+          },
+
+          clear: () => {
+            const objs = fc.getObjects();
+            if (objs.length > 0) fc.remove(...objs);
+            fc.backgroundColor = BG_COLOR;
+            fc.requestRenderAll();
+            pushHistory();
+          },
+
+          async applyTemplate(id: string) {
+            const fc_ = fcRef.current;
+            if (!fc_) return;
+
+            const tpl = TEMPLATES.find((t) => t.id === id);
+            if (!tpl) return;
+
+            // draw template, then snapshot
+            const savedClip = fc_.clipPath;
+
+            tpl.draw(
+              {
+                clear: () => fc_.clear(),
+                add: (o) => fc_.add(o),
+                requestRenderAll: () => fc_.requestRenderAll(),
+                get backgroundColor() {
+                  return fc_.backgroundColor;
+                },
+                set backgroundColor(v) {
+                  fc_.backgroundColor = v;
+                },
+                get clipPath() {
+                  return fc_.clipPath;
+                },
+                set clipPath(v) {
+                  fc_.clipPath = v;
+                },
+              },
+              {
+                Circle: Circle as never,
+                Rect: Rect as never,
+                Line: Line as never,
+                Path: Path as never,
+              },
+            );
+
+            if (!fc_.clipPath && savedClip) {
+              fc_.clipPath = savedClip;
+            }
             fc_.requestRenderAll();
-          }
-        },
+            pushHistory();
+          },
 
-        clear() {
-          const fc_ = fcRef.current;
-          if (!fc_) return;
-          const objs = [...fc_.getObjects()];
-          for (const o of objs) fc_.remove(o);
-          fc_.backgroundColor = BG_COLOR;
-          fc_.requestRenderAll();
-        },
+          exportCanvas() {
+            const fc_ = fcRef.current;
+            if (!fc_) return null;
+            try {
+              const json = fc_.toJSON();
 
-        async applyTemplate(id: string) {
-          const fc_ = fcRef.current;
-          if (!fc_) return;
+              // Protect against cases where the canvas zoom is 0 or invalid
+              // (which can happen if the container has zero width for any reason).
+              const rawZoom = fc_.getZoom();
+              const zoom =
+                typeof rawZoom === "number" && rawZoom > 0 ? rawZoom : 1;
 
-          const tpl = TEMPLATES.find((t) => t.id === id);
-          if (!tpl) return;
+              const target = 256;
+              const multiplier = target / (CANVAS_SIZE * zoom);
+              const safeMultiplier =
+                Number.isFinite(multiplier) && multiplier > 0
+                  ? multiplier
+                  : target / CANVAS_SIZE;
 
-          // Preserve clip before clear() (defensive: Fabric v7 keeps clipPath
-          // across clear() but we restore it in case a future version changes)
-          const savedClip = fc_.clipPath;
+              let dataUrl = fc_.toDataURL({
+                format: "webp",
+                quality: 0.82,
+                multiplier: safeMultiplier,
+              });
+              if (!dataUrl.startsWith("data:image/webp")) {
+                dataUrl = fc_.toDataURL({
+                  format: "jpeg",
+                  quality: 0.82,
+                  multiplier: safeMultiplier,
+                });
+              }
 
-          tpl.draw(
-            {
-              clear: () => fc_.clear(),
-              add:   (o) => fc_.add(o),
-              requestRenderAll: () => fc_.requestRenderAll(),
-              get backgroundColor() { return fc_.backgroundColor; },
-              set backgroundColor(v) { fc_.backgroundColor = v; },
-              get clipPath() { return fc_.clipPath; },
-              set clipPath(v) { fc_.clipPath = v; },
-            },
-            // Pass Fabric constructors captured in this closure
-            {
-              Circle: Circle as never,
-              Rect:   Rect as never,
-              Line:   Line as never,
-              Path:   Path as never,
+              return {
+                canvas_data: {
+                  version: 1,
+                  width: CANVAS_SIZE,
+                  height: CANVAS_SIZE,
+                  ...json,
+                },
+                texture_data_url: dataUrl,
+              };
+            } catch (err) {
+              console.error("[exportCanvas] failed:", err);
+
+              // Last-resort fallback: try exporting using a neutral multiplier
+              // to avoid drawImage errors when some internal canvas has 0 size.
+              try {
+                const json = fc_.toJSON();
+                const altMultiplier = 256 / CANVAS_SIZE;
+                let dataUrl = fc_.toDataURL({
+                  format: "webp",
+                  quality: 0.82,
+                  multiplier: altMultiplier,
+                });
+                if (!dataUrl.startsWith("data:image/webp")) {
+                  dataUrl = fc_.toDataURL({
+                    format: "jpeg",
+                    quality: 0.82,
+                    multiplier: altMultiplier,
+                  });
+                }
+                return {
+                  canvas_data: {
+                    version: 1,
+                    width: CANVAS_SIZE,
+                    height: CANVAS_SIZE,
+                    ...json,
+                  },
+                  texture_data_url: dataUrl,
+                };
+              } catch (err2) {
+                console.error("[exportCanvas] fallback failed:", err2);
+                return null;
+              }
             }
-          );
+          },
+        } as const;
 
-          // Restore clip if it was cleared
-          if (!fc_.clipPath && savedClip) {
-            fc_.clipPath = savedClip;
-          }
-          fc_.requestRenderAll();
-        },
+        useCanvasStore.getState().registerActions(myActions as any);
 
-        exportCanvas() {
-          const fc_ = fcRef.current;
-          if (!fc_) return null;
-          try {
-            const json = fc_.toJSON();
-            // Export at a fixed ~256px for lightweight WebP
-            const zoom    = fc_.getZoom();
-            const target  = 256;
-            const multiplier = target / (CANVAS_SIZE * zoom);
-            let dataUrl = fc_.toDataURL({ format: "webp", quality: 0.82, multiplier });
-            if (!dataUrl.startsWith("data:image/webp")) {
-              dataUrl = fc_.toDataURL({ format: "jpeg", quality: 0.82, multiplier });
-            }
-            return {
-              canvas_data: { version: 1, width: CANVAS_SIZE, height: CANVAS_SIZE, ...json },
-              texture_data_url: dataUrl,
-            };
-          } catch {
-            return null;
-          }
-        },
-      });
+        fc.requestRenderAll();
 
-      fc.requestRenderAll();
-    });
+        // snapshot initial state (current) so undo has a baseline
+        pushHistory();
+      },
+    );
 
     return () => {
       disposed = true;
@@ -248,6 +372,7 @@ export function PlanetCanvas({ tier = "guest" }: PlanetCanvasProps) {
         fcRef.current.dispose();
         fcRef.current = null;
       }
+
       useCanvasStore.getState().clearActions();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -264,15 +389,17 @@ export function PlanetCanvas({ tier = "guest" }: PlanetCanvasProps) {
       )}
 
       {/* Outer div — limits max size and centers the canvas */}
-      <div className="relative w-full" style={{ maxWidth: CANVAS_SIZE }}>
-
+      <div className="relative w-full max-w-[512px] sm:max-w-[512px]">
         {/* Decorative ring around the planet */}
         <div
           className="absolute rounded-full pointer-events-none"
           style={{
             inset: "-4px",
             ...(isPremium
-              ? { border: "3px solid rgba(194,239,78,0.6)", animation: "premium-pulse 2.5s ease-in-out infinite" }
+              ? {
+                  border: "3px solid rgba(194,239,78,0.6)",
+                  animation: "premium-pulse 2.5s ease-in-out infinite",
+                }
               : { border: "2px solid rgba(54,45,89,0.5)" }),
           }}
         />

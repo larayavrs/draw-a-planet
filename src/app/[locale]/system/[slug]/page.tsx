@@ -31,13 +31,15 @@ async function getSystemPlanets(systemId: string): Promise<Planet[]> {
   const supabase = getSupabaseServiceClient();
   const { data: planetsRaw } = await supabase
     .from("planets")
-    .select(`
+    .select(
+      `
       id, name, planet_type, texture_url, system_id,
       orbit_radius, orbit_speed, orbit_offset, orbit_inclination,
       tier_at_creation, lifespan_expires_at, is_active, view_count, created_at,
       user_id,
       users ( username, avatar_url )
-    `)
+    `,
+    )
     .eq("system_id", systemId)
     .eq("is_active", true)
     .order("created_at", { ascending: false })
@@ -46,8 +48,10 @@ async function getSystemPlanets(systemId: string): Promise<Planet[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (planetsRaw ?? []).map((p: any) => ({
     ...p,
-    creator_username: (p.users as { username: string } | null)?.username ?? null,
-    creator_avatar:   (p.users as { avatar_url: string } | null)?.avatar_url ?? null,
+    creator_username:
+      (p.users as { username: string } | null)?.username ?? null,
+    creator_avatar:
+      (p.users as { avatar_url: string } | null)?.avatar_url ?? null,
   })) as Planet[];
 }
 
@@ -62,11 +66,15 @@ export async function generateStaticParams() {
   const slugs = (systems ?? []).map((s: { slug: string }) => s.slug);
 
   return locales.flatMap((locale) =>
-    slugs.map((slug: string) => ({ locale, slug }))
+    slugs.map((slug: string) => ({ locale, slug })),
   );
 }
 
-export async function generateMetadata({ params }: { params: Promise<Params> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>;
+}) {
   const { slug } = await params;
   const system = await getSystem(slug);
   if (!system) return { title: "System not found" };
@@ -84,7 +92,11 @@ export default async function SystemPage({
   if (!system) notFound();
 
   return (
-    <Suspense fallback={<div className="min-h-[calc(100dvh-80px)] bg-darker-purple" />}>
+    <Suspense
+      fallback={
+        <div className="bg-black min-h-[calc(100dvh-140px)] md:min-h-[calc(100dvh-160px)] lg:min-h-[calc(100dvh-170px)]" />
+      }
+    >
       <SystemContent system={system} locale={locale} />
     </Suspense>
   );
@@ -101,16 +113,18 @@ async function SystemContent({
   const planets = await getSystemPlanets(system.id);
 
   return (
-    <div className="relative overflow-hidden" style={{ height: "calc(100dvh - 80px)" }}>
-      {/* 3D Canvas — key forces full remount when system changes */}
-      <div className="absolute inset-0" key={system.id}>
+    <div className="relative overflow-hidden bg-black h-[calc(100dvh-140px)] md:h-[calc(100dvh-160px)] lg:h-[calc(100dvh-170px)]">
+      {/* 3D Canvas */}
+      <div className="absolute inset-0">
         {planets.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <GlassCard className="p-8 text-center max-w-sm">
               <p className="text-4xl mb-3">🪐</p>
               <p className="text-text-muted">{t("empty_state")}</p>
               <Link href={`/${locale}/draw`} className="mt-4 inline-block">
-                <Button variant="cta" size="md">Start drawing</Button>
+                <Button variant="cta" size="md">
+                  Start drawing
+                </Button>
               </Link>
             </GlassCard>
           </div>
