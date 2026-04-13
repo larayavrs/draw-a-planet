@@ -152,7 +152,21 @@
     "error_invalid_credentials": "Email o contraseña incorrectos.",
     "error_email_taken": "Este email ya está registrado.",
     "error_username_taken": "Este nombre de usuario está tomado.",
-    "error_weak_password": "La contraseña debe tener al menos 8 caracteres."
+    "error_weak_password": "La contraseña debe tener al menos 8 caracteres.",
+    "forgot_password_title": "¿Olvidaste tu contraseña?",
+    "forgot_password_subtitle": "Ingresá tu email y te enviamos un link para resetearla.",
+    "forgot_password_btn": "Enviar link de recuperación",
+    "forgot_password_sent": "Revisá tu bandeja — enviamos un link a",
+    "forgot_password_back": "Volver al inicio de sesión",
+    "reset_password_title": "Elegí una nueva contraseña",
+    "reset_password_subtitle": "Elegí una contraseña segura para tu cuenta.",
+    "reset_password_btn": "Actualizar contraseña",
+    "reset_password_success": "Contraseña actualizada. Redirigiendo...",
+    "new_password_label": "Nueva contraseña",
+    "new_password_placeholder": "••••••••",
+    "confirm_password_label": "Confirmar contraseña",
+    "error_passwords_mismatch": "Las contraseñas no coinciden.",
+    "error_reset_expired": "Este link expiró. Pedí uno nuevo."
   },
   "premium": {
     "page_title": "Desbloqueá el Universo Completo",

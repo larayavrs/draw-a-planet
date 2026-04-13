@@ -12,7 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 
-export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function LoginPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = use(params);
   const t = useTranslations("auth");
   const router = useRouter();
@@ -69,7 +73,15 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="password">{t("password_label")}</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">{t("password_label")}</Label>
+              <Link
+                href={`/${locale}/auth/forgot-password`}
+                className="text-xs text-text-muted hover:text-white transition-colors"
+              >
+                {t("forgot_password")}
+              </Link>
+            </div>
             <Input
               id="password"
               type="password"

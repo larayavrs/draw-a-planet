@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Reset your password — draw-a-planet</title>
+  <style>
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    @media (prefers-color-scheme: dark) {
+      body { background-color: #120a24 !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#120a24;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#120a24;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width:480px;">
+
+          <!-- Logo -->
+          <tr>
+            <td align="center" style="padding-bottom:32px;">
+              <p style="margin:0;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">
+                🪐 draw-a-planet
+              </p>
+              <p style="margin:6px 0 0;font-size:13px;color:#8b82a9;">
+                A living universe, one planet at a time.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td style="background-color:#1a0e2e;border:1px solid #362d59;border-radius:16px;padding:36px 32px;">
+
+              <!-- Icon -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom:24px;">
+                    <div style="display:inline-block;background-color:#362d59;border-radius:50%;width:56px;height:56px;line-height:56px;text-align:center;font-size:26px;">
+                      🔐
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#ffffff;text-align:center;line-height:1.3;">
+                Reset your password
+              </h1>
+              <p style="margin:0 0 28px;font-size:15px;color:#8b82a9;text-align:center;line-height:1.6;">
+                We received a request to reset the password for your account.<br/>
+                Click below to choose a new one.
+              </p>
+
+              <!-- CTA -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display:inline-block;background-color:#c2ef4e;color:#120a24;font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;padding:14px 32px;letter-spacing:0.2px;">
+                      Reset my password
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Warning note -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:28px;">
+                <tr>
+                  <td style="background-color:#120a24;border:1px solid #362d59;border-radius:10px;padding:14px 16px;">
+                    <p style="margin:0;font-size:12px;color:#8b82a9;line-height:1.6;">
+                      ⚠️ <strong style="color:#cfcfdb;">Didn't request this?</strong>
+                      Your password has not been changed. You can safely ignore this email.
+                      If you're concerned, consider reviewing your account security.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:20px 0 0;font-size:12px;color:#8b82a9;text-align:center;">
+                This link expires in 1 hour.
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding-top:28px;">
+              <p style="margin:0;font-size:12px;color:#362d59;">
+                © draw-a-planet ·
+                <a href="{{ .SiteURL }}" style="color:#6a5fc1;text-decoration:none;">{{ .SiteURL }}</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
