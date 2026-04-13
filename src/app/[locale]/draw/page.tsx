@@ -134,17 +134,10 @@ export default function DrawPage({
   const isPremium = tier === "premium";
 
   return (
-    <div className="min-h-screen bg-darker-purple">
-      <div className="mx-auto max-w-6xl px-4 py-6 lg:py-8">
+    <div className="bg-darker-purple">
+      <div className="mx-auto max-w-6xl px-2 py-4 lg:px-4 lg:py-8">
         {/* Page header */}
         <div className="mb-5 flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-1 text-sm text-text-muted hover:text-white transition-colors"
-          >
-            <span>←</span>
-            <span>{t("back")}</span>
-          </button>
           <h1 className="text-2xl font-bold text-white">{t("page_title")}</h1>
           {!tierLoading && isPremium && (
             <span className="text-[11px] font-bold text-lime bg-lime/10 border border-lime/30 px-2 py-0.5 rounded-full">
@@ -156,7 +149,7 @@ export default function DrawPage({
         {/* ── Desktop: 3-column layout ── */}
         <div className="hidden lg:flex gap-5 items-start">
           {/* Left sidebar: Tools + Colors + Templates */}
-          <GlassCard className="p-4 w-56 shrink-0 flex flex-col gap-5">
+          <GlassCard className="p-4 w-64 shrink-0 flex flex-col gap-5 max-h-[calc(100vh-8rem)] overflow-auto">
             <BrushToolbar />
             {!tierLoading && <ColorPicker tier={tier} />}
             {!tierLoading && (
@@ -175,7 +168,7 @@ export default function DrawPage({
           </div>
 
           {/* Right: Publish panel */}
-          <GlassCard className="p-5 w-64 shrink-0 flex flex-col gap-4">
+          <GlassCard className="p-5 w-64 shrink-0 flex flex-col gap-4 max-h-[calc(100vh-8rem)] overflow-auto">
             <PublishPanel
               tier={tier}
               tierLoading={tierLoading}
@@ -188,41 +181,39 @@ export default function DrawPage({
         </div>
 
         {/* ── Mobile: single-column layout ── */}
-        <div className="flex flex-col gap-4 lg:hidden">
+        <div className="flex flex-col gap-4 pb-12 lg:hidden">
           {/* Canvas — centered, scales automatically */}
-          <div className="flex justify-center">
+          <div className="flex justify-center px-0">
             {!tierLoading && isDesktop === false && (
               <PlanetCanvas tier={tier} />
             )}
           </div>
 
-          {/* Tools row */}
-          <GlassCard className="p-3">
-            <BrushToolbar />
+          {/* Tools & Colors — collapsible card */}
+          <GlassCard className="p-4">
+            <div className="flex flex-col gap-4">
+              <BrushToolbar />
+              {!tierLoading && <ColorPicker tier={tier} />}
+            </div>
           </GlassCard>
 
-          {/* Colors */}
+          {/* Planet type + Templates */}
           {!tierLoading && (
-            <GlassCard className="p-3">
-              <ColorPicker tier={tier} />
-            </GlassCard>
-          )}
-
-          {/* Planet type + Templates row */}
-          {!tierLoading && (
-            <GlassCard className="p-3 flex flex-col gap-4">
-              <PlanetTypeSelector tier={tier} locale={locale} />
-              <PlanetTemplates
-                tier={tier}
-                locale={locale}
-                activeTemplate={activeTemplate}
-                onSelect={setActiveTemplate}
-              />
+            <GlassCard className="p-4">
+              <div className="flex flex-col gap-4">
+                <PlanetTypeSelector tier={tier} locale={locale} />
+                <PlanetTemplates
+                  tier={tier}
+                  locale={locale}
+                  activeTemplate={activeTemplate}
+                  onSelect={setActiveTemplate}
+                />
+              </div>
             </GlassCard>
           )}
 
           {/* Publish panel */}
-          <GlassCard className="p-4 flex flex-col gap-4">
+          <GlassCard className="p-5">
             <PublishPanel
               tier={tier}
               tierLoading={tierLoading}

@@ -389,7 +389,7 @@ export function PlanetCanvas({ tier = "guest" }: PlanetCanvasProps) {
       )}
 
       {/* Outer div — limits max size and centers the canvas */}
-      <div className="relative w-full" style={{ maxWidth: CANVAS_SIZE }}>
+      <div className="relative w-full max-w-[512px] sm:max-w-[512px]">
         {/* Decorative ring around the planet */}
         <div
           className="absolute rounded-full pointer-events-none"

@@ -22,15 +22,16 @@ export function ColorPicker({ tier }: { tier: UserTier }) {
         {t("color_picker_title")}
       </p>
 
-      {/* Swatches — scrollable on mobile, wrapping on desktop */}
-      <div className="flex flex-wrap gap-1.5 overflow-x-auto">
+      {/* Swatches — wrap into rows; parent card will handle scrolling */}
+      <div className="flex flex-wrap gap-1.5">
         {palette.map((color) => (
           <button
             key={color}
             onClick={() => setCurrentColor(color)}
             className={cn(
-              "w-7 h-7 rounded-full transition-all shrink-0 hover:scale-110",
-              currentColor === color && "ring-2 ring-white ring-offset-1 ring-offset-deep-purple"
+              "w-7 h-7 rounded-full shrink-0",
+              currentColor === color &&
+                "ring-2 ring-white ring-offset-1 ring-offset-deep-purple",
             )}
             style={{ backgroundColor: color }}
             title={color}
@@ -43,7 +44,7 @@ export function ColorPicker({ tier }: { tier: UserTier }) {
         <div>
           <button
             onClick={() => setShowWheel((v) => !v)}
-            className="text-xs text-lime hover:text-lime/80 transition-colors"
+            className="text-xs text-lime"
           >
             {showWheel ? "▲ Hide wheel" : "▼ Custom color"}
           </button>
@@ -76,7 +77,9 @@ export function ColorPicker({ tier }: { tier: UserTier }) {
           className="w-6 h-6 rounded-full border border-white/20 shrink-0"
           style={{ backgroundColor: currentColor }}
         />
-        <span className="text-xs font-mono text-text-muted">{currentColor}</span>
+        <span className="text-xs font-mono text-text-muted">
+          {currentColor}
+        </span>
       </div>
     </div>
   );
