@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { SystemBoard } from "@/components/three/SystemBoard";
 import { GlassCard } from "@/components/layout/GlassCard";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { SystemHeader } from "./SystemHeader";
 import Link from "next/link";
 import type { Planet, System } from "@/types/planet";

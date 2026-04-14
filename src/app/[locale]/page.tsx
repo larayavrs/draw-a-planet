@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import Link from "next/link";
 import { GlassCard } from "@/components/layout/GlassCard";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   params: Promise<{ locale: string }>;

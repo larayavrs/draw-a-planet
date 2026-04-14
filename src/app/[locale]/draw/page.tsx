@@ -9,7 +9,7 @@ import { BrushToolbar } from "@/components/canvas/BrushToolbar";
 import { ColorPicker } from "@/components/canvas/ColorPicker";
 import { PlanetTypeSelector } from "@/components/canvas/PlanetTypeSelector";
 import { PlanetTemplates } from "@/components/canvas/PlanetTemplates";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

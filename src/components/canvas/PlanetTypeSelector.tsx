@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useCanvasStore } from "@/stores/canvasStore";
 import { ALLOWED_PLANET_TYPES } from "@/lib/planet/limits";
 import { Modal } from "@/components/layout/Modal";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import type { PlanetType, UserTier } from "@/types/tier";
 import Link from "next/link";

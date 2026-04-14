@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,7 +48,8 @@ export function Navbar({ locale }: { locale: string }) {
       setProfile(data ?? null);
     }
 
-    supabase.auth.getUser().then(({ data: { user } }) => loadUser(user));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    supabase.auth.getUser().then((res: any) => loadUser(res.data?.user ?? null));
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event: string, session: any) => {

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { TierBadge } from "@/components/layout/TierBadge";
 import { Input } from "@/components/ui/input";
