@@ -80,7 +80,7 @@ export function Navbar({ locale }: { locale: string }) {
     : (profile?.username?.slice(0, 2).toUpperCase() ?? "?");
 
   return (
-    <header className="flex-nowrap border-b border-border bg-background/60 backdrop-blur-md fixed top-0 left-0 right-0 z-50">
+    <header className="flex-nowrap border-b border-border-purple bg-background/60 backdrop-blur-md fixed top-0 left-0 right-0 z-50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between">
         <Link
           href={base}
