@@ -21,7 +21,12 @@
       "Bash(npx shadcn@latest add dialog --yes)",
       "Bash(npx shadcn@latest add dialog --yes --overwrite)",
       "Bash(npx shadcn@latest add badge --yes)",
-      "Bash(npx shadcn@latest add separator --yes)"
+      "Bash(npx shadcn@latest add separator --yes)",
+      "Bash(npx supabase:*)",
+      "Bash(npx shadcn@latest add dropdown-menu --yes)",
+      "Bash(node -e \"const f=require\\('./messages/en.json'\\); console.log\\(JSON.stringify\\(f.system_board, null, 2\\)\\)\")",
+      "Bash(node -e \"const f=require\\('./messages/en.json'\\); console.log\\(JSON.stringify\\(f.auth, null, 2\\)\\)\")",
+      "Bash(node -e \"const f=require\\('./messages/es.json'\\); console.log\\(JSON.stringify\\(f.auth, null, 2\\)\\)\")"
     ]
   }
 }

@@ -116,22 +116,20 @@ export function Navbar({ locale }: { locale: string }) {
           <div className="hidden sm:flex items-center gap-2">
             {user ? (
               <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <button className="flex items-center gap-2 rounded-full border border-border-purple hover:border-sentry-purple/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sentry-purple/60">
-                    {profile?.avatar_url ? (
-                      <Image
-                        src={profile.avatar_url}
-                        alt={profile.username}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="w-8 h-8 rounded-full bg-sentry-purple/40 flex items-center justify-center text-xs font-bold text-white">
-                        {initials}
-                      </span>
-                    )}
-                  </button>
+                <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-border-purple hover:border-sentry-purple/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sentry-purple/60">
+                  {profile?.avatar_url ? (
+                    <Image
+                      src={profile.avatar_url}
+                      alt={profile.username}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="w-8 h-8 rounded-full bg-sentry-purple/40 flex items-center justify-center text-xs font-bold text-white">
+                      {initials}
+                    </span>
+                  )}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
